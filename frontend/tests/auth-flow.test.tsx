@@ -1,43 +1,16 @@
-import type { AuthUser, DashboardStats } from '@qrcare/shared';
 import { screen, waitFor } from '@testing-library/react';
 import { http } from 'msw';
 import { describe, expect, it } from 'vitest';
+import {
+  adminUser as admin,
+  customerUser as customer,
+  dashboardReturns,
+  ownProfile,
+  signedInAs,
+  stats,
+} from './fixtures';
 import { apiError, apiOk, server } from './msw/server';
 import { renderApp } from './utils/render';
-
-const admin: AuthUser = {
-  id: '11111111-1111-4111-8111-111111111111',
-  role: 'ADMIN',
-  email: 'admin@example.com',
-  phone: null,
-  displayName: 'admin@example.com',
-  mustChangePassword: false,
-};
-
-const customer: AuthUser = {
-  id: '22222222-2222-4222-8222-222222222222',
-  role: 'CUSTOMER',
-  email: null,
-  phone: '+84912345678',
-  displayName: 'Nguyễn Văn A',
-  mustChangePassword: false,
-};
-
-const stats: DashboardStats = {
-  totalCustomers: 12,
-  activeCustomers: 10,
-  inactiveCustomers: 2,
-  activeQrCodes: 9,
-  revokedQrCodes: 3,
-};
-
-function signedInAs(user: AuthUser) {
-  server.use(http.get('/api/auth/me', () => apiOk({ user })));
-}
-
-function dashboardReturns(data: DashboardStats) {
-  server.use(http.get('/api/admin/dashboard', () => apiOk({ stats: data })));
-}
 
 describe('authentication flows', () => {
   it('sends anonymous visitors of admin pages to the login page', async () => {
@@ -159,12 +132,10 @@ describe('authentication flows', () => {
 
   it('keeps customers out of admin pages', async () => {
     signedInAs(customer);
+    server.use(http.get('/api/me/profile', () => apiOk(ownProfile)));
     const { router } = renderApp('/admin');
-    expect(
-      await screen.findByRole('heading', { name: /Xin chào, Nguyễn Văn A/ }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Hồ sơ của tôi' })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/profile');
-    expect(screen.getByText('0912 345 678')).toBeInTheDocument();
   });
 
   it('returns to the login page when the session cannot be refreshed', async () => {
@@ -188,7 +159,9 @@ describe('authentication flows', () => {
     server.use(
       http.get('/api/admin/dashboard', () => {
         dashboardCalls += 1;
-        return dashboardCalls === 1 ? apiError(401, 'UNAUTHENTICATED') : apiOk({ stats });
+        return dashboardCalls === 1
+          ? apiError(401, 'UNAUTHENTICATED')
+          : apiOk({ stats, recentCustomers: [] });
       }),
       http.post('/api/auth/refresh', () => apiOk(null)),
     );

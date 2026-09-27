@@ -14,6 +14,9 @@ const MESSAGES: Record<string, string> = {
   SESSION_EXPIRED: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
   PASSWORD_CHANGE_REQUIRED: 'Bạn cần đổi mật khẩu trước khi tiếp tục.',
   NOT_FOUND: 'Không tìm thấy dữ liệu.',
+  CUSTOMER_NOT_FOUND: 'Không tìm thấy khách hàng.',
+  EMAIL_TAKEN: 'Email này đã được dùng cho tài khoản khác.',
+  PHONE_TAKEN: 'Số điện thoại này đã được dùng cho tài khoản khác.',
   CSRF_TOKEN_INVALID: 'Phiên làm việc không hợp lệ. Vui lòng tải lại trang.',
 };
 
@@ -36,8 +39,8 @@ export function errorMessage(error: unknown): string {
 }
 
 /**
- * Copies server-side validation messages onto the matching form fields.
- * Returns true if at least one field error was applied.
+ * Copies field-level messages from the server (validation errors, duplicate email/phone)
+ * onto the matching form fields. Returns true if at least one field error was applied.
  */
 export function applyServerFieldErrors<T extends FieldValues>(
   error: unknown,
@@ -45,7 +48,7 @@ export function applyServerFieldErrors<T extends FieldValues>(
   fields: readonly Path<T>[],
 ): boolean {
   const apiError = getApiError(error);
-  if (apiError?.code !== 'VALIDATION_ERROR' || !Array.isArray(apiError.details)) return false;
+  if (!apiError || !Array.isArray(apiError.details)) return false;
   let applied = false;
   for (const issue of apiError.details as ValidationIssue[]) {
     const field = fields.find((f) => f === issue.path);

@@ -4,6 +4,7 @@ import { authenticate, requirePasswordChanged, requireRole } from '../middleware
 import type { RateLimiters } from '../middleware/rate-limit.js';
 import { createAdminRouter } from './admin.routes.js';
 import { createAuthRouter } from './auth.routes.js';
+import { createMeRouter } from './me.routes.js';
 
 export function createApiRouter(limiters: RateLimiters): Router {
   const api = Router();
@@ -22,8 +23,9 @@ export function createApiRouter(limiters: RateLimiters): Router {
     authenticate,
     requirePasswordChanged,
     requireRole('ADMIN'),
-    createAdminRouter(),
+    createAdminRouter(limiters),
   );
+  api.use('/me', authenticate, requirePasswordChanged, requireRole('CUSTOMER'), createMeRouter());
 
   return api;
 }

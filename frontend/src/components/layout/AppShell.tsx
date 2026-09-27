@@ -1,4 +1,4 @@
-import { KeyRound, LayoutDashboard, LogOut, Menu, UserRound, X } from 'lucide-react';
+import { KeyRound, LayoutDashboard, LogOut, Menu, UserRound, Users, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router';
 import { useAuth, useLogout } from '../../features/auth/use-auth';
@@ -15,7 +15,10 @@ interface NavItem {
 }
 
 const NAV: Record<'admin' | 'customer', NavItem[]> = {
-  admin: [{ to: '/admin', label: 'Tổng quan', Icon: LayoutDashboard, end: true }],
+  admin: [
+    { to: '/admin', label: 'Tổng quan', Icon: LayoutDashboard, end: true },
+    { to: '/admin/users', label: 'Khách hàng', Icon: Users },
+  ],
   customer: [{ to: '/profile', label: 'Hồ sơ của tôi', Icon: UserRound }],
 };
 

@@ -18,6 +18,14 @@ vi.stubGlobal(
   })),
 );
 
+// jsdom lacks HTMLDialogElement.showModal/close.
+HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) {
+  this.open = true;
+};
+HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) {
+  this.open = false;
+};
+
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 
 beforeEach(() => {

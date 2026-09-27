@@ -75,6 +75,15 @@ Dev: Vite proxy /api → :4000      ─┘         ├─► StorageProvider (Lo
 - **Mật khẩu**: Argon2id (19 MiB, 2 vòng — mức tối thiểu OWASP). Mật khẩu mới: 8–128 ký tự, có chữ và số.
 - Mọi response `/api` có `Cache-Control: no-store`.
 
+## Quản lý khách hàng (Milestone 4)
+
+- Mọi response được dựng **từng trường một** qua hàm mapper (`toProfileView`, `toDetail`…) — không bao giờ trả nguyên đối tượng DB, nên cột mới trong DB không thể vô tình lộ ra API.
+- Tuổi luôn tính từ ngày sinh theo lịch Việt Nam (`calculateAge` trong `shared`), cả backend lẫn frontend dùng chung một hàm.
+- Tìm kiếm tên không phân biệt dấu dùng extension `unaccent` có sẵn của PostgreSQL (migration `0001_enable_unaccent.sql`). Đây là extension "trusted" nên chủ database bật được mà không cần superuser; các dịch vụ PostgreSQL cloud phổ biến đều hỗ trợ.
+- Không xóa cứng: vô hiệu hóa (`INACTIVE`) thay cho xóa — thu hồi mọi phiên, chặn đăng nhập, QR ngừng hiển thị.
+- `audit_logs` ghi: tạo, sửa (chỉ **tên** trường thay đổi), đổi trạng thái (`from`/`to`), cấp lại mật khẩu, khách tự sửa hồ sơ.
+- Mật khẩu tạm chỉ xuất hiện trong response tạo/cấp lại và trên màn hình admin **một lần** (trang chi tiết xóa nó khỏi lịch sử trình duyệt ngay sau khi đọc).
+
 ### Chưa triển khai
 
 - OTP 6 số (`crypto.randomInt`), lưu HMAC-SHA256, hết hạn 10 phút, tối đa 5 lần thử, gửi lại sau 60 giây. Xác thực OTP xong → cấp reset token ngắn hạn. _(Milestone 8)_

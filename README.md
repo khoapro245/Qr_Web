@@ -2,8 +2,8 @@
 
 Hệ thống thông tin cá nhân qua mã QR gắn trên áo. Mỗi áo có một mã QR riêng; ai quét mã đều xem được thông tin hỗ trợ (được phép công khai) của người mặc mà không cần đăng nhập.
 
-> Trạng thái: đang phát triển — đã xong Milestone 1–3 (khởi tạo, database, đăng nhập).
-> Kiến trúc và các quyết định: [docs/architecture.md](docs/architecture.md).
+> Trạng thái: đang phát triển — đã xong Milestone 1–4 (khởi tạo, database, đăng nhập, quản lý khách hàng).
+> Kiến trúc và các quyết định: [docs/architecture.md](docs/architecture.md) · API: [docs/api.md](docs/api.md).
 
 ## Công nghệ
 

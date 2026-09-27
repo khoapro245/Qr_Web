@@ -1,6 +1,10 @@
 import type { RouteObject } from 'react-router';
 import { AppShell } from '../components/layout/AppShell';
 import { RequireAuth } from '../features/auth/RequireAuth';
+import { CustomerCreatePage } from '../pages/admin/CustomerCreatePage';
+import { CustomerDetailPage } from '../pages/admin/CustomerDetailPage';
+import { CustomerEditPage } from '../pages/admin/CustomerEditPage';
+import { CustomersPage } from '../pages/admin/CustomersPage';
 import { DashboardPage } from '../pages/admin/DashboardPage';
 import { ChangePasswordPage } from '../pages/auth/ChangePasswordPage';
 import { LoginPage } from '../pages/auth/LoginPage';
@@ -20,7 +24,13 @@ export const routes: RouteObject[] = [
     children: [
       {
         element: <AppShell area="admin" />,
-        children: [{ path: '/admin', element: <DashboardPage /> }],
+        children: [
+          { path: '/admin', element: <DashboardPage /> },
+          { path: '/admin/users', element: <CustomersPage /> },
+          { path: '/admin/users/create', element: <CustomerCreatePage /> },
+          { path: '/admin/users/:id', element: <CustomerDetailPage /> },
+          { path: '/admin/users/:id/edit', element: <CustomerEditPage /> },
+        ],
       },
     ],
   },
