@@ -37,15 +37,39 @@ const envSchema = z
     // Only local disk for now; an S3-compatible provider can be added behind the same interface.
     STORAGE_PROVIDER: z.enum(['local']).default('local'),
     STORAGE_LOCAL_DIR: z.string().min(1).default('storage'),
+
+    // Key for hashing one-time passwords (HMAC). Separate from the JWT secret.
+    OTP_SECRET: secret,
+
+    // "console" prints messages locally for development and is refused in production.
+    EMAIL_PROVIDER: z.enum(['console', 'smtp', 'disabled']).default('console'),
+    EMAIL_FROM: z.string().min(3).default('QR Care <no-reply@qrcare.local>'),
+    SMTP_HOST: z.string().min(1).optional(),
+    SMTP_PORT: z.coerce.number().int().min(1).max(65535).default(587),
+    // true = implicit TLS (usually port 465); false = STARTTLS upgrade (usually 587).
+    SMTP_SECURE: z.stringbool().default(false),
+    SMTP_USER: z.string().optional(),
+    SMTP_PASS: z.string().optional(),
+
+    // No production SMS gateway has been chosen yet; see docs/architecture.md.
+    SMS_PROVIDER: z.enum(['console', 'disabled']).default('console'),
   })
   .superRefine((value, ctx) => {
+    if (value.EMAIL_PROVIDER === 'smtp' && !value.SMTP_HOST) {
+      ctx.addIssue({ code: 'custom', path: ['SMTP_HOST'], message: 'required for smtp' });
+    }
     if (value.NODE_ENV !== 'production') return;
-    if (/change-me/i.test(value.JWT_ACCESS_SECRET)) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['JWT_ACCESS_SECRET'],
-        message: 'placeholder secret used in production',
-      });
+    for (const key of ['JWT_ACCESS_SECRET', 'OTP_SECRET'] as const) {
+      if (/change-me/i.test(value[key])) {
+        ctx.addIssue({ code: 'custom', path: [key], message: 'placeholder secret in production' });
+      }
+    }
+    // Console providers write OTPs to the logs — never acceptable in production.
+    if (value.EMAIL_PROVIDER === 'console') {
+      ctx.addIssue({ code: 'custom', path: ['EMAIL_PROVIDER'], message: 'console not allowed' });
+    }
+    if (value.SMS_PROVIDER === 'console') {
+      ctx.addIssue({ code: 'custom', path: ['SMS_PROVIDER'], message: 'console not allowed' });
     }
     if (!value.PUBLIC_QR_BASE_URL?.startsWith('https://')) {
       ctx.addIssue({

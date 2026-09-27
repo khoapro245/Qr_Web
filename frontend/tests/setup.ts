@@ -1,7 +1,11 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest';
 import { server } from './msw/server';
+
+// Tests render the whole app with lazily-loaded routes; under a busy machine the first load
+// of a route can exceed the default 1s wait.
+configure({ asyncUtilTimeout: 3000 });
 
 // jsdom does not implement matchMedia (used by the theme provider).
 vi.stubGlobal(

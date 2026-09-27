@@ -23,6 +23,12 @@ const MESSAGES: Record<string, string> = {
   FILE_TOO_LARGE: 'Ảnh quá lớn. Vui lòng chọn ảnh tối đa 5 MB.',
   FILE_REQUIRED: 'Vui lòng chọn một ảnh.',
   INVALID_UPLOAD: 'Tải ảnh lên không thành công. Vui lòng thử lại.',
+  OTP_INVALID: 'Mã xác nhận không đúng hoặc đã hết hạn.',
+  RESET_TOKEN_INVALID: 'Phiên khôi phục đã hết hạn. Vui lòng yêu cầu mã mới.',
+  SMS_UNAVAILABLE:
+    'Khôi phục qua SMS hiện chưa được hỗ trợ. Vui lòng dùng email hoặc liên hệ nhà sản xuất.',
+  EMAIL_UNAVAILABLE:
+    'Khôi phục qua email hiện chưa được hỗ trợ. Vui lòng dùng số điện thoại hoặc liên hệ nhà sản xuất.',
 };
 
 const FALLBACK = 'Đã có lỗi xảy ra. Vui lòng thử lại.';

@@ -63,6 +63,28 @@ export const loginSchema = z.object({
 });
 export type LoginInput = z.output<typeof loginSchema>;
 
+export const OTP_LENGTH = 6;
+export const OTP_TTL_MINUTES = 10;
+export const OTP_RESEND_SECONDS = 60;
+
+export const forgotPasswordSchema = z.object({ identifier: loginIdentifierSchema });
+
+export const otpCodeSchema = z
+  .string()
+  .trim()
+  .regex(new RegExp(`^\\d{${OTP_LENGTH}}$`), `Mã xác nhận gồm ${OTP_LENGTH} chữ số`);
+
+export const verifyOtpSchema = z.object({
+  identifier: loginIdentifierSchema,
+  otp: otpCodeSchema,
+});
+
+export const resetPasswordSchema = z.object({
+  resetToken: z.string().min(20, 'Phiên khôi phục không hợp lệ').max(200),
+  newPassword: newPasswordSchema,
+});
+export type ResetPasswordInput = z.output<typeof resetPasswordSchema>;
+
 export const changePasswordSchema = z
   .object({
     currentPassword: existingPasswordSchema,

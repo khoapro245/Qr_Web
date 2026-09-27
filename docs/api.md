@@ -14,14 +14,19 @@ Base path: `/api`. Mọi response là JSON:
 
 ## Xác thực — `/api/auth`
 
-| Method | Path               | Quyền          | Mô tả                                                                       |
-| ------ | ------------------ | -------------- | --------------------------------------------------------------------------- |
-| GET    | `/csrf`            | Công khai      | Đặt cookie `qrc_csrf`, trả `{ csrfToken }`                                  |
-| POST   | `/login`           | Công khai      | `{ identifier, password }` — identifier là email hoặc SĐT. Đặt cookie phiên |
-| POST   | `/refresh`         | Cookie refresh | Xoay vòng refresh token, cấp access token mới                               |
-| POST   | `/logout`          | Công khai      | Thu hồi phiên hiện tại, xóa cookie                                          |
-| GET    | `/me`              | Đã đăng nhập   | `{ user }` — cho phép cả khi đang phải đổi mật khẩu                         |
-| POST   | `/change-password` | Đã đăng nhập   | `{ currentPassword, newPassword }` — thu hồi mọi phiên khác                 |
+| Method | Path               | Quyền          | Mô tả                                                                                                    |
+| ------ | ------------------ | -------------- | -------------------------------------------------------------------------------------------------------- |
+| GET    | `/csrf`            | Công khai      | Đặt cookie `qrc_csrf`, trả `{ csrfToken }`                                                               |
+| POST   | `/login`           | Công khai      | `{ identifier, password }` — identifier là email hoặc SĐT. Đặt cookie phiên                              |
+| POST   | `/refresh`         | Cookie refresh | Xoay vòng refresh token, cấp access token mới                                                            |
+| POST   | `/logout`          | Công khai      | Thu hồi phiên hiện tại, xóa cookie                                                                       |
+| GET    | `/me`              | Đã đăng nhập   | `{ user }` — cho phép cả khi đang phải đổi mật khẩu                                                      |
+| POST   | `/change-password` | Đã đăng nhập   | `{ currentPassword, newPassword }` — thu hồi mọi phiên khác                                              |
+| POST   | `/forgot-password` | Công khai      | `{ identifier }` — gửi OTP qua email (nếu là email) hoặc SMS (nếu là SĐT). Luôn trả `{ accepted: true }` |
+| POST   | `/verify-otp`      | Công khai      | `{ identifier, otp }` → `{ resetToken }` (hết hạn sau 15 phút, dùng 1 lần)                               |
+| POST   | `/reset-password`  | Công khai      | `{ resetToken, newPassword }` — đặt mật khẩu, thu hồi mọi phiên                                          |
+
+Khôi phục mật khẩu: chỉ tài khoản khách hàng đang hoạt động nhận được mã (admin dùng CLI). `forgot-password` trả **cùng một** response dù tài khoản có tồn tại hay không. OTP 6 số, hết hạn 10 phút, tối đa 5 lần nhập, gửi lại sau 60 giây, tối đa 5 mã/giờ/tài khoản; giới hạn IP 5 yêu cầu gửi mã và 20 lần xác nhận / 15 phút. Lỗi: `OTP_INVALID` (400, chung cho sai/hết hạn/hết lượt), `RESET_TOKEN_INVALID` (400), `EMAIL_UNAVAILABLE` / `SMS_UNAVAILABLE` (503 khi kênh bị tắt trong cấu hình).
 
 Mã lỗi: `INVALID_CREDENTIALS` (401), `ACCOUNT_LOCKED` (423, `details.retryAfterSeconds`), `ACCOUNT_INACTIVE` (403 khi đăng nhập / 401 khi đang dùng), `UNAUTHENTICATED` (401), `SESSION_EXPIRED` (401), `REFRESH_CONFLICT` (409), `INVALID_CURRENT_PASSWORD` (400), `PASSWORD_CHANGE_REQUIRED` (403), `RATE_LIMITED` (429).
 

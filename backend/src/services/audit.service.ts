@@ -11,7 +11,8 @@ export type AuditAction =
   | 'QR_GENERATED'
   | 'QR_REGENERATED'
   | 'QR_REVOKED'
-  | 'PROFILE_UPDATED_BY_OWNER';
+  | 'PROFILE_UPDATED_BY_OWNER'
+  | 'PASSWORD_RESET_BY_OTP';
 
 /**
  * Records who did what to whom. `metadata` must contain only non-personal values such as

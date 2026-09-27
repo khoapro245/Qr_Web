@@ -137,9 +137,27 @@ Người quét ──► /qr/<token> (SPA, không cần đăng nhập)
 - **Tải nhanh**: các trang admin/khách hàng được tải theo route (lazy); `shared` khai báo `"sideEffects": false` để zod không nằm trong gói tải ban đầu. Trang công khai tải ~93 KB gzip (trước tối ưu ~168 KB).
 - **Tiêu đề tab chung** ("Thông tin hỗ trợ") — tên chủ áo không lọt vào lịch sử trình duyệt đồng bộ.
 
-### Chưa triển khai
+## Khôi phục mật khẩu (Milestone 8)
 
-- OTP 6 số (`crypto.randomInt`), lưu HMAC-SHA256, hết hạn 10 phút, tối đa 5 lần thử, gửi lại sau 60 giây. Xác thực OTP xong → cấp reset token ngắn hạn. _(Milestone 8)_
+```text
+1. POST /auth/forgot-password {identifier}
+   └► kênh = email → EMAIL | SĐT → SMS (kênh tắt → 503, giống nhau cho mọi tài khoản)
+   └► tài khoản không phải khách hàng đang hoạt động / trong 60s cooldown / quá 5 mã/giờ
+      → dừng im lặng; mọi trường hợp đều trả {accepted: true}
+   └► đóng mọi OTP cũ → lưu HMAC(OTP_SECRET, userId:code) → gửi ở nền (không chờ)
+2. POST /auth/verify-otp {identifier, otp}
+   └► trừ 1 lượt thử (atomic, chỉ khi còn lượt) → so sánh constant-time
+   └► đúng → reset token 256-bit (lưu SHA-256, 15 phút)
+3. POST /auth/reset-password {resetToken, newPassword}
+   └► [transaction] tiêu thụ token (1 lần) → đổi mật khẩu → thu hồi mọi phiên → đóng OTP → audit
+```
+
+- **HMAC có khóa** thay vì hash thường: chỉ có 1 triệu mã 6 số, hash thường bị dò ngược ngay nếu lộ bảng; HMAC với `OTP_SECRET` thì không.
+- **Trừ lượt thử trước khi so sánh** (một câu `UPDATE ... WHERE attempt_count < 5 RETURNING`) — test gửi 20 lượt đoán song song, số lượt dừng đúng ở 5.
+- **Gửi ở nền** để thời gian phản hồi không cho biết tài khoản có tồn tại. Lỗi gửi được ghi log (không kèm mã).
+- **Provider**: `EmailProvider` (`console` / `smtp` qua nodemailer / `disabled`), `SmsProvider` (`console` / `disabled`). `console` in mã ra log để test ở máy dev và **bị từ chối khi `NODE_ENV=production`**. Nhà cung cấp SMS thật chưa được chọn — thêm một class `SmsProvider` khi quyết định (sẽ hỏi trước vì có chi phí và cần đăng ký brandname).
+- **Reset token chỉ đi qua state của router**, không bao giờ nằm trên URL; trang đặt lại mật khẩu xóa nó khỏi lịch sử ngay khi đọc.
+- Bản ghi OTP cũ hơn 24 giờ của một tài khoản được xóa mỗi khi tài khoản đó yêu cầu mã mới.
 - OTP 6 số (`crypto.randomInt`), lưu HMAC-SHA256, hết hạn 10 phút, tối đa 5 lần thử, gửi lại sau 60 giây. Xác thực OTP xong → cấp reset token ngắn hạn.
 - QR token: 128-bit `crypto.randomBytes` → base64url (22 ký tự). QR in ECC mức Q.
 

@@ -2,7 +2,7 @@
 
 Hệ thống thông tin cá nhân qua mã QR gắn trên áo. Mỗi áo có một mã QR riêng; ai quét mã đều xem được thông tin hỗ trợ (được phép công khai) của người mặc mà không cần đăng nhập.
 
-> Trạng thái: đang phát triển — đã xong Milestone 1–7 (khởi tạo, database, đăng nhập, quản lý khách hàng, ảnh đại diện, mã QR, trang QR công khai).
+> Trạng thái: đang phát triển — đã xong Milestone 1–8 (khởi tạo, database, đăng nhập, quản lý khách hàng, ảnh đại diện, mã QR, trang QR công khai, khôi phục mật khẩu).
 > Kiến trúc và các quyết định: [docs/architecture.md](docs/architecture.md) · API: [docs/api.md](docs/api.md).
 
 ## Công nghệ
@@ -55,6 +55,8 @@ npm run dev
 ```
 
 Mở http://localhost:5173 và đăng nhập bằng email admin cùng mật khẩu tạm ở bước 5. Lần đăng nhập đầu, hệ thống bắt buộc đổi mật khẩu.
+
+**Thử khôi phục mật khẩu ở máy dev:** với `EMAIL_PROVIDER=console` / `SMS_PROVIDER=console`, mã OTP không được gửi thật mà in ra log của server (dòng `[DEV EMAIL]` / `[DEV SMS]`) trong cửa sổ `npm run dev`.
 
 ### Không dùng Docker? Cài PostgreSQL trực tiếp
 

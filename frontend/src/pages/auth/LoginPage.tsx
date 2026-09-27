@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, type AuthUser } from '@qrcare/shared';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Navigate, useLocation } from 'react-router';
+import { Link, Navigate, useLocation } from 'react-router';
 import type { z } from 'zod';
 import { login } from '../../api/auth';
 import { AuthLayout } from '../../components/layout/AuthLayout';
@@ -12,6 +12,7 @@ import { PasswordField, TextField } from '../../components/ui/TextField';
 import { homePathFor, useAuth, useSetAuthUser } from '../../features/auth/use-auth';
 import { errorMessage } from '../../lib/errors';
 import { usePageTitle } from '../../lib/use-page-title';
+import type { LoginNoticeState } from './ResetPasswordPage';
 
 type FormInput = z.input<typeof loginSchema>;
 type FormOutput = z.output<typeof loginSchema>;
@@ -29,7 +30,9 @@ export function LoginPage() {
   const { user, isLoading } = useAuth();
   const setAuthUser = useSetAuthUser();
   const location = useLocation();
-  const from = (location.state as { from?: string } | null)?.from;
+  const state = location.state as ({ from?: string } & Partial<LoginNoticeState>) | null;
+  const from = state?.from;
+  const passwordReset = state?.passwordReset === true;
   const [formError, setFormError] = useState<string | null>(null);
 
   const {
@@ -56,6 +59,9 @@ export function LoginPage() {
   return (
     <AuthLayout title="Đăng nhập" description="Dùng email hoặc số điện thoại đã đăng ký.">
       <form noValidate className="space-y-4" onSubmit={(e) => void handleSubmit(onSubmit)(e)}>
+        {passwordReset && !formError && (
+          <Alert tone="success">Đã đặt mật khẩu mới. Vui lòng đăng nhập bằng mật khẩu mới.</Alert>
+        )}
         {formError && <Alert tone="error">{formError}</Alert>}
         <TextField
           label="Email hoặc số điện thoại"
@@ -73,6 +79,11 @@ export function LoginPage() {
           error={errors.password?.message}
           {...register('password')}
         />
+        <div className="text-right text-sm">
+          <Link to="/forgot-password" className="font-medium text-primary hover:underline">
+            Quên mật khẩu?
+          </Link>
+        </div>
         <Button type="submit" size="lg" fullWidth loading={isSubmitting}>
           Đăng nhập
         </Button>

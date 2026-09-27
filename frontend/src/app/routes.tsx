@@ -32,6 +32,14 @@ export const routes: RouteObject[] = [
         ...lazyPage(() => import('../pages/auth/LoginPage'), 'LoginPage'),
       },
       {
+        path: '/forgot-password',
+        ...lazyPage(() => import('../pages/auth/ForgotPasswordPage'), 'ForgotPasswordPage'),
+      },
+      {
+        path: '/reset-password',
+        ...lazyPage(() => import('../pages/auth/ResetPasswordPage'), 'ResetPasswordPage'),
+      },
+      {
         element: <RequireAuth allowPendingPasswordChange />,
         children: [
           {
