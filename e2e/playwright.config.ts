@@ -1,5 +1,13 @@
 import { defineConfig, devices } from '@playwright/test';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { backendEnv, E2E, ROOT_DIR } from './support/config.js';
+
+// Both servers import the compiled shared package. Fail with a clear message instead of a
+// module-not-found error deep inside a server log.
+if (!existsSync(join(ROOT_DIR, 'shared', 'dist', 'index.js'))) {
+  throw new Error('shared/dist is missing: run the suite with "npm run test:e2e" (it builds it).');
+}
 
 // Locally the installed Microsoft Edge is used (no browser download). CI sets
 // PW_CHANNEL="" to use Playwright's bundled Chromium instead.
@@ -51,7 +59,9 @@ export default defineConfig({
     },
     {
       // The production build (with its Content-Security-Policy), served by `vite preview`.
-      command: `npm run build -w shared && npm run build -w frontend && npm run preview -w frontend -- --port ${E2E.webPort} --strictPort`,
+      // `shared` is built once beforehand by `npm run test:e2e`, not here: both servers start
+      // together, and rebuilding it here would rewrite files the API is loading.
+      command: `npm run build -w frontend && npm run preview -w frontend -- --port ${E2E.webPort} --strictPort`,
       cwd: ROOT_DIR,
       url: E2E.webUrl,
       env: { VITE_API_PROXY_TARGET: E2E.apiUrl },

@@ -52,6 +52,7 @@ Kịch bản (17 test, trong đó trang QR công khai chạy cả trên màn hì
 - CI / máy khác: đặt `E2E_DATABASE_URL` (phải kết thúc bằng `_e2e`), `PW_CHANNEL=""` và chạy `npx playwright install --with-deps chromium` một lần.
 - Tài khoản PostgreSQL cần quyền `CREATE DATABASE` cho lần chạy đầu (Docker dev đã có); nếu không, tạo `qrcare_e2e` thủ công.
 - `DEV_OUTBOX_FILE` (ghi OTP ra file cho E2E) bị **từ chối** khi `NODE_ENV=production`.
+- Luôn chạy bằng `npm run test:e2e` (build `shared` trước). Gọi thẳng `npx playwright test` trên một bản clone mới sẽ báo "shared/dist is missing" — đây chính là lỗi đã làm hỏng lần chạy CI đầu tiên.
 
 ## CI (GitHub Actions)
 

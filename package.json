@@ -19,7 +19,7 @@
     "format:check": "prettier --check .",
     "test": "npm run build -w shared && npm run test -w backend && npm run test -w frontend",
     "test:coverage": "npm run build -w shared && npm run test -w backend -- --coverage && npm run test -w frontend -- --coverage",
-    "test:e2e": "playwright test -c e2e",
+    "test:e2e": "npm run build -w shared && playwright test -c e2e",
     "test:e2e:report": "playwright show-report playwright-report"
   },
   "devDependencies": {
