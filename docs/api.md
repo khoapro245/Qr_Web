@@ -40,6 +40,15 @@ Mã lỗi: `INVALID_CREDENTIALS` (401), `ACCOUNT_LOCKED` (423, `details.retryAft
 | GET | `/users/:id/avatar` | Ảnh đại diện (`image/webp`), 404 `AVATAR_NOT_FOUND` nếu chưa có |
 | PUT | `/users/:id/avatar` | Tải/đổi ảnh: `multipart/form-data`, **một** file trong trường `avatar`, tối đa 5 MB |
 | DELETE | `/users/:id/avatar` | Xóa ảnh |
+| GET | `/users/:id/qr` | `{ current, history }` — mã hiện tại (có `url`) và lịch sử (chỉ `tokenHint`) |
+| POST | `/users/:id/qr` | Tạo mã mới khi chưa có mã đang hoạt động (`409 QR_ALREADY_ACTIVE` nếu đã có) |
+| POST | `/users/:id/qr/regenerate` | Thu hồi mã hiện tại và tạo mã mới (một transaction) |
+| POST | `/users/:id/qr/revoke` | Thu hồi mã hiện tại, không tạo mã mới (`404 QR_NOT_FOUND` nếu không có) |
+| GET | `/users/:id/qr/image` | Ảnh mã hiện tại. Query: `format=png\|svg` (mặc định png), `download=1` để tải về |
+
+- Tạo khách hàng (`POST /users`) **tự động** tạo mã QR đầu tiên trong cùng transaction.
+- Mã QR chỉ chứa `PUBLIC_QR_BASE_URL/qr/<token>` — token 128-bit ngẫu nhiên, 22 ký tự base64url. Không chứa thông tin cá nhân.
+- PNG 1024px, SVG vector; mức sửa lỗi Q (chịu ~25% hư hại), lề 4 ô.
 
 - Ảnh: chỉ nhận JPEG/PNG/WebP (xác định bằng cách giải mã, không tin MIME type), tối thiểu 64×64. Lỗi: `INVALID_IMAGE`, `IMAGE_TOO_SMALL` (400), `FILE_TOO_LARGE` (413), `FILE_REQUIRED` / `INVALID_UPLOAD` (400). Ảnh được lưu lại dạng WebP 512×512, không còn metadata.
 - `profile.avatarVersion` đổi mỗi khi đổi ảnh — gắn vào URL ảnh (`?v=`) để trình duyệt không dùng ảnh cũ.

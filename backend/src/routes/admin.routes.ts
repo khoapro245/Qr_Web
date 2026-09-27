@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import * as avatars from '../controllers/avatar.controller.js';
 import * as customers from '../controllers/customer.controller.js';
+import * as qr from '../controllers/qr.controller.js';
 import type { RateLimiters } from '../middleware/rate-limit.js';
 import { avatarUpload } from '../middleware/upload.js';
 
@@ -21,6 +22,12 @@ export function createAdminRouter(limiters: RateLimiters): Router {
   router.get('/users/:id/avatar', avatars.show);
   router.put('/users/:id/avatar', avatarUpload, avatars.upload);
   router.delete('/users/:id/avatar', avatars.remove);
+
+  router.get('/users/:id/qr', qr.show);
+  router.post('/users/:id/qr', qr.generate);
+  router.post('/users/:id/qr/regenerate', qr.regenerate);
+  router.post('/users/:id/qr/revoke', qr.revoke);
+  router.get('/users/:id/qr/image', qr.image);
 
   return router;
 }

@@ -1,4 +1,4 @@
-import type { AccountStatus, BloodGroup, Gender, UserRole } from './constants.js';
+import type { AccountStatus, BloodGroup, Gender, QrStatus, UserRole } from './constants.js';
 
 /** The signed-in account as returned by the auth endpoints. Never contains credentials. */
 export interface AuthUser {
@@ -54,6 +54,23 @@ export interface CustomerAccountView {
   lockedUntil: string | null;
 }
 
+export interface QrCodeView {
+  id: string;
+  status: QrStatus;
+  /** The public link encoded in the QR. Only present for the active code. */
+  url: string | null;
+  /** Last characters of the token, enough to tell codes apart in the history. */
+  tokenHint: string;
+  createdAt: string;
+  revokedAt: string | null;
+}
+
+export interface CustomerQrInfo {
+  current: QrCodeView | null;
+  /** All codes, newest first, including the current one. */
+  history: QrCodeView[];
+}
+
 /** Admin view of one customer, split into the sections shown on the detail page. */
 export interface CustomerDetail {
   id: string;
@@ -63,6 +80,7 @@ export interface CustomerDetail {
   publicConsentAt: string | null;
   account: CustomerAccountView;
   profile: CustomerProfileView;
+  qr: QrCodeView | null;
 }
 
 /** What a customer sees about themselves. */

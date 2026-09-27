@@ -56,6 +56,23 @@
   --ring: #2dd4bf;
 }
 
+/* Paper is white: always print with the light palette, even in dark mode. */
+@media print {
+  :root {
+    --bg: #ffffff;
+  }
+
+  .dark {
+    color-scheme: light;
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-muted: #f1f5f9;
+    --border: #dde3ea;
+    --fg: #0f172a;
+    --fg-muted: #475569;
+  }
+}
+
 @theme inline {
   --color-bg: var(--bg);
   --color-surface: var(--surface);

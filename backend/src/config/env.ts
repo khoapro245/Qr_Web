@@ -22,6 +22,9 @@ const envSchema = z
       .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
       .default('info'),
     APP_ORIGIN: z.url().default('http://localhost:5173'),
+    // Base of the link printed inside every QR code. Printed shirts cannot be updated, so in
+    // production this must be a domain that will be kept for the lifetime of the shirts.
+    PUBLIC_QR_BASE_URL: z.url().optional(),
     TRUST_PROXY: z.coerce.number().int().min(0).default(0),
 
     DATABASE_URL: postgresUrl,
@@ -36,17 +39,26 @@ const envSchema = z
     STORAGE_LOCAL_DIR: z.string().min(1).default('storage'),
   })
   .superRefine((value, ctx) => {
-    if (value.NODE_ENV === 'production' && /change-me/i.test(value.JWT_ACCESS_SECRET)) {
+    if (value.NODE_ENV !== 'production') return;
+    if (/change-me/i.test(value.JWT_ACCESS_SECRET)) {
       ctx.addIssue({
         code: 'custom',
         path: ['JWT_ACCESS_SECRET'],
         message: 'placeholder secret used in production',
       });
     }
+    if (!value.PUBLIC_QR_BASE_URL?.startsWith('https://')) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['PUBLIC_QR_BASE_URL'],
+        message: 'must be set to an https:// URL in production',
+      });
+    }
   })
   .transform((value) => ({
     ...value,
     COOKIE_SECURE: value.COOKIE_SECURE ?? value.NODE_ENV === 'production',
+    PUBLIC_QR_BASE_URL: (value.PUBLIC_QR_BASE_URL ?? value.APP_ORIGIN).replace(/\/+$/, ''),
   }));
 
 export type Env = z.output<typeof envSchema>;

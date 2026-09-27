@@ -100,6 +100,22 @@ Admin chọn ảnh ──► multer (bộ nhớ, ≤ 5 MB, đúng 1 file "avatar
 - **Lưu trữ tách biệt** qua interface `StorageProvider` (`put/get/delete` theo key). Hiện có `LocalDiskStorage` (thư mục `backend/storage`, cần sao lưu cùng DB). Thêm S3-compatible sau này chỉ là thêm một class — sẽ hỏi trước vì cần thêm dependency (SDK).
 - **Ảnh không có URL công khai cố định**: admin xem qua `/api/admin/users/:id/avatar`, khách qua `/api/me/avatar`, trang QR công khai (Milestone 7) qua `/api/qr/:token/avatar` — thu hồi QR là ảnh cũng không truy cập được nữa.
 
+## Mã QR (Milestone 6)
+
+```text
+Tạo khách hàng ──► [transaction] users + customer_profiles + qr_codes(ACTIVE) + audit
+Tạo lại        ──► [transaction, khóa dòng users của khách] ACTIVE → REVOKED, tạo ACTIVE mới
+Thu hồi        ──► [transaction, khóa dòng users của khách] ACTIVE → REVOKED
+Ảnh QR         ──► sinh khi được yêu cầu từ token hiện tại (không lưu file)
+```
+
+- **Token**: `crypto.randomBytes(16)` → base64url (22 ký tự, 128-bit). Không suy ra từ id, SĐT, ngày sinh. 128-bit giữ QR đủ thưa để quét tốt trên vải mà vẫn không thể đoán.
+- **Nội dung QR** chỉ là URL `PUBLIC_QR_BASE_URL/qr/<token>` — test giải mã ngược ảnh PNG để khẳng định không có tên/SĐT/ngày sinh.
+- **Tối đa một mã ACTIVE / khách**: partial unique index trong DB + khóa dòng khách hàng khi đổi mã. Khóa riêng dòng QR là **không đủ**: transaction chờ sẽ thấy dòng đó đã bị thu hồi, tưởng "chưa có mã" rồi tạo thêm — lỗi này được phát hiện bằng test tạo lại đồng thời.
+- **Hạn chế lộ token**: chỉ mã ACTIVE trả `url` đầy đủ; lịch sử chỉ có 4 ký tự cuối (`tokenHint`). Audit log chỉ ghi id nội bộ của mã. Log HTTP che `/qr/<token>`.
+- **`PUBLIC_QR_BASE_URL` bắt buộc (https) ở production** — server từ chối khởi động nếu thiếu. Domain này in vĩnh viễn lên áo.
+- **In ấn**: trang quản lý QR có nút "In" với bố cục in riêng (chỉ QR 9cm + tên), luôn in màu sáng.
+
 ### Chưa triển khai
 
 - OTP 6 số (`crypto.randomInt`), lưu HMAC-SHA256, hết hạn 10 phút, tối đa 5 lần thử, gửi lại sau 60 giây. Xác thực OTP xong → cấp reset token ngắn hạn. _(Milestone 8)_

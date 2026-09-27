@@ -12,7 +12,7 @@ import {
   type UpdateCustomer,
 } from '@qrcare/shared';
 import { db } from '../db/client.js';
-import type { CustomerProfile } from '../db/schema.js';
+import type { CustomerProfile, QrCode } from '../db/schema.js';
 import {
   findCustomerById,
   insertCustomer,
@@ -22,6 +22,7 @@ import {
   type CustomerListRow,
   type CustomerRecord,
 } from '../repositories/customer.repository.js';
+import { findActiveQr } from '../repositories/qr.repository.js';
 import { revokeAllSessionsForUser } from '../repositories/session.repository.js';
 import { updatePassword } from '../repositories/user.repository.js';
 import { AppError } from '../utils/app-error.js';
@@ -29,6 +30,7 @@ import { sha256 } from '../utils/crypto.js';
 import { generateTemporaryPassword, hashPassword } from '../utils/password.js';
 import { uniqueViolationConstraint } from '../utils/pg-errors.js';
 import { changedFields, recordAudit } from './audit.service.js';
+import { issueQr, toQrView } from './qr.service.js';
 
 // ---------------------------------------------------------------------------------------
 // Mapping: every response is built field by field, so a new database column can never leak
@@ -64,7 +66,7 @@ function toSummary(row: CustomerListRow): CustomerSummary {
   };
 }
 
-function toDetail({ user, profile }: CustomerRecord): CustomerDetail {
+function toDetail({ user, profile }: CustomerRecord, qr: QrCode | undefined): CustomerDetail {
   return {
     id: user.id,
     status: user.status,
@@ -83,6 +85,7 @@ function toDetail({ user, profile }: CustomerRecord): CustomerDetail {
         user.lockedUntil && user.lockedUntil > new Date() ? user.lockedUntil.toISOString() : null,
     },
     profile: toProfileView(profile),
+    qr: qr ? toQrView(qr) : null,
   };
 }
 
@@ -142,7 +145,8 @@ export async function recentCustomers(limit = 5): Promise<CustomerSummary[]> {
 }
 
 export async function getCustomerForAdmin(id: string): Promise<CustomerDetail> {
-  return toDetail(await requireCustomer(id));
+  const [record, qr] = await Promise.all([requireCustomer(id), findActiveQr(id)]);
+  return toDetail(record, qr);
 }
 
 export async function createCustomer(
@@ -154,7 +158,8 @@ export async function createCustomer(
   const passwordHash = await hashPassword(password);
 
   try {
-    const record = await db.transaction(async (tx) => {
+    // Account, profile and its first QR code are created together or not at all.
+    const { record, qr } = await db.transaction(async (tx) => {
       const created = await insertCustomer(
         { email: input.email, phone: input.phone, passwordHash, mustChangePassword: true },
         { ...profileColumns(input), publicConsentAt: new Date() },
@@ -164,11 +169,12 @@ export async function createCustomer(
         { actorUserId: adminId, action: 'CUSTOMER_CREATED', targetUserId: created.user.id },
         tx,
       );
-      return created;
+      const issued = await issueQr(created.user.id, adminId, tx);
+      return { record: created, qr: issued };
     });
     // A generated password is returned exactly once so the admin can hand it over with the
     // shirt; it is not stored anywhere in plaintext.
-    return { customer: toDetail(record), temporaryPassword: generated ? password : null };
+    return { customer: toDetail(record, qr), temporaryPassword: generated ? password : null };
   } catch (err) {
     rethrowDuplicate(err);
   }

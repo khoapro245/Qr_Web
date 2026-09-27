@@ -60,6 +60,14 @@ export const customerDetail: CustomerDetail = {
     hasAvatar: false,
     avatarVersion: null,
   },
+  qr: {
+    id: '44444444-4444-4444-8444-444444444444',
+    status: 'ACTIVE',
+    url: 'http://localhost:5173/qr/AbCdEfGhIjKlMnOpQrStUv',
+    tokenHint: 'StUv',
+    createdAt: '2026-09-01T03:00:00.000Z',
+    revokedAt: null,
+  },
 };
 
 export const withAvatar = (detail: CustomerDetail): CustomerDetail => ({

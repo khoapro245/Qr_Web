@@ -19,6 +19,7 @@ import { ProfileDetails } from '../../features/customers/ProfileDetails';
 import { customerKeys } from '../../features/customers/query-keys';
 import { StatusBadge } from '../../features/customers/StatusBadge';
 import { TemporaryPasswordNotice } from '../../features/customers/TemporaryPasswordNotice';
+import { QrSummaryCard } from '../../features/qr/QrSummaryCard';
 import { errorMessage } from '../../lib/errors';
 import { formatDateTime, formatPhone, STATUS_LABELS } from '../../lib/format';
 import { usePageTitle } from '../../lib/use-page-title';
@@ -196,6 +197,7 @@ export function CustomerDetailPage() {
           </Card>
         </div>
         <div className="space-y-6">
+          <QrSummaryCard customer={customer} />
           <AvatarManager customer={customer} />
           <Card>
             <h2 className="mb-4 text-lg font-semibold">Trạng thái tài khoản</h2>

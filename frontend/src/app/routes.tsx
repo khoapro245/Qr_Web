@@ -4,6 +4,7 @@ import { RequireAuth } from '../features/auth/RequireAuth';
 import { CustomerCreatePage } from '../pages/admin/CustomerCreatePage';
 import { CustomerDetailPage } from '../pages/admin/CustomerDetailPage';
 import { CustomerEditPage } from '../pages/admin/CustomerEditPage';
+import { CustomerQrPage } from '../pages/admin/CustomerQrPage';
 import { CustomersPage } from '../pages/admin/CustomersPage';
 import { DashboardPage } from '../pages/admin/DashboardPage';
 import { ChangePasswordPage } from '../pages/auth/ChangePasswordPage';
@@ -30,6 +31,7 @@ export const routes: RouteObject[] = [
           { path: '/admin/users/create', element: <CustomerCreatePage /> },
           { path: '/admin/users/:id', element: <CustomerDetailPage /> },
           { path: '/admin/users/:id/edit', element: <CustomerEditPage /> },
+          { path: '/admin/users/:id/qr', element: <CustomerQrPage /> },
         ],
       },
     ],
