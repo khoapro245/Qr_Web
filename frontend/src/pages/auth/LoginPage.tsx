@@ -9,6 +9,7 @@ import { AuthLayout } from '../../components/layout/AuthLayout';
 import { Alert } from '../../components/ui/Alert';
 import { Button } from '../../components/ui/Button';
 import { PasswordField, TextField } from '../../components/ui/TextField';
+import { takeSessionEndNotice } from '../../features/auth/session-notice';
 import { homePathFor, useAuth, useSetAuthUser } from '../../features/auth/use-auth';
 import { errorMessage } from '../../lib/errors';
 import { usePageTitle } from '../../lib/use-page-title';
@@ -33,6 +34,7 @@ export function LoginPage() {
   const state = location.state as ({ from?: string } & Partial<LoginNoticeState>) | null;
   const from = state?.from;
   const passwordReset = state?.passwordReset === true;
+  const [sessionEnd] = useState(takeSessionEndNotice);
   const [formError, setFormError] = useState<string | null>(null);
 
   const {
@@ -61,6 +63,13 @@ export function LoginPage() {
       <form noValidate className="space-y-4" onSubmit={(e) => void handleSubmit(onSubmit)(e)}>
         {passwordReset && !formError && (
           <Alert tone="success">Đã đặt mật khẩu mới. Vui lòng đăng nhập bằng mật khẩu mới.</Alert>
+        )}
+        {sessionEnd && !formError && (
+          <Alert tone={sessionEnd === 'inactive' ? 'warning' : 'info'}>
+            {sessionEnd === 'inactive'
+              ? 'Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ nhà sản xuất.'
+              : 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'}
+          </Alert>
         )}
         {formError && <Alert tone="error">{formError}</Alert>}
         <TextField

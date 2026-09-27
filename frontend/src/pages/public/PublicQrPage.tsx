@@ -106,12 +106,13 @@ function ProfileCard({ profile }: { profile: PublicProfile }) {
           {rows
             .filter((row) => row.value !== null && row.value !== '')
             .map(({ label, value, Icon }) => (
-              <div key={label} className="flex items-start gap-4 py-4">
-                <Icon aria-hidden="true" className="mt-1 size-5 shrink-0 text-primary" />
-                <div className="min-w-0">
-                  <dt className="text-sm text-fg-muted">{label}</dt>
-                  <dd className="text-lg font-medium break-words text-fg">{value}</dd>
-                </div>
+              // Only dt/dd inside each group; the icon sits in the dt to keep the list valid.
+              <div key={label} className="relative py-4 pl-9">
+                <dt className="text-sm text-fg-muted">
+                  <Icon aria-hidden="true" className="absolute left-0 top-5 size-5 text-primary" />
+                  {label}
+                </dt>
+                <dd className="text-lg font-medium break-words text-fg">{value}</dd>
               </div>
             ))}
         </dl>

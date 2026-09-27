@@ -155,6 +155,7 @@ export function CustomersPage() {
           {/* Desktop: table */}
           <div className="hidden overflow-hidden rounded-2xl border border-border bg-surface md:block">
             <table className="w-full text-left text-sm">
+              <caption className="sr-only">Danh sách khách hàng</caption>
               <thead className="bg-surface-muted text-fg-muted">
                 <tr>
                   <th scope="col" className="px-4 py-3 font-medium">

@@ -1,5 +1,5 @@
 import { KeyRound, LayoutDashboard, LogOut, Menu, UserRound, Users, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router';
 import { useAuth, useLogout } from '../../features/auth/use-auth';
 import { cn } from '../../lib/cn';
@@ -26,7 +26,20 @@ export function AppShell({ area }: { area: 'admin' | 'customer' }) {
   const { user } = useAuth();
   const logout = useLogout();
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
   const home = area === 'admin' ? '/admin' : '/profile';
+
+  // Escape closes the mobile menu and returns focus to the button that opened it.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setMenuOpen(false);
+      menuButtonRef.current?.focus();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [menuOpen]);
 
   const navLinks = NAV[area].map(({ to, label, Icon, end }) => (
     <NavLink
@@ -88,6 +101,7 @@ export function AppShell({ area }: { area: 'admin' | 'customer' }) {
             {accountActions}
           </div>
           <button
+            ref={menuButtonRef}
             type="button"
             className="ml-auto flex size-10 items-center justify-center rounded-lg text-fg hover:bg-surface-muted md:hidden"
             aria-expanded={menuOpen}

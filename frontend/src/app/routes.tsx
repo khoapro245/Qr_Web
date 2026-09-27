@@ -1,11 +1,13 @@
 import type { ComponentType } from 'react';
 import type { RouteObject } from 'react-router';
 import { AppShell } from '../components/layout/AppShell';
+import { RootLayout } from '../components/layout/RootLayout';
 import { FullPageSpinner } from '../components/ui/Spinner';
 import { RequireAuth } from '../features/auth/RequireAuth';
 import { HomeRedirect } from '../pages/HomeRedirect';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { PublicQrPage } from '../pages/public/PublicQrPage';
+import { RouteErrorPage } from '../pages/RouteErrorPage';
 
 /**
  * Loads a page's code only when its route is visited. The public QR page stays in the main
@@ -22,6 +24,9 @@ function lazyPage<T extends Record<string, unknown>>(
 
 export const routes: RouteObject[] = [
   {
+    element: <RootLayout />,
+    // Friendly fallback for unexpected render errors and stale lazy chunks after a deploy.
+    errorElement: <RouteErrorPage />,
     // Shown while the first lazily-loaded route resolves.
     HydrateFallback: FullPageSpinner,
     children: [

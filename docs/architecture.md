@@ -137,6 +137,15 @@ Người quét ──► /qr/<token> (SPA, không cần đăng nhập)
 - **Tải nhanh**: các trang admin/khách hàng được tải theo route (lazy); `shared` khai báo `"sideEffects": false` để zod không nằm trong gói tải ban đầu. Trang công khai tải ~93 KB gzip (trước tối ưu ~168 KB).
 - **Tiêu đề tab chung** ("Thông tin hỗ trợ") — tên chủ áo không lọt vào lịch sử trình duyệt đồng bộ.
 
+## Giao diện & khả năng truy cập (Milestone 9)
+
+- **Theme**: sáng / tối / theo hệ thống, bằng token màu ngữ nghĩa (`bg-surface`, `text-fg-muted`…) nên mọi component tự hỗ trợ dark mode. `public/theme-init.js` áp theme trước khi React chạy (không nháy màu). In ấn luôn dùng bảng màu sáng.
+- **Kiểm tra truy cập tự động**: `frontend/tests/a11y.test.tsx` chạy axe-core (WCAG 2.0/2.1/2.2 A–AA + best-practice) trên 9 màn hình chính ở mỗi lần `npm test`. Độ tương phản màu không đo được trong jsdom nên được kiểm tra thủ công bằng axe trong trình duyệt thật ở cả hai theme — không có vi phạm.
+- **Trình đọc màn hình**: nhãn gắn với ô nhập, lỗi liên kết bằng `aria-describedby`, `aria-invalid`; hộp thoại dùng `<dialog>` gốc (bẫy focus, Esc); link "Bỏ qua điều hướng"; mỗi lần chuyển trang, vùng `aria-live` đọc tên trang mới; bảng có `<caption>`.
+- **Bàn phím**: viền focus rõ ở mọi phần tử; menu di động đóng bằng Esc và trả focus về nút menu.
+- **Trạng thái**: mỗi trang có trạng thái đang tải, rỗng, lỗi (kèm "Thử lại"). Lỗi bất ngờ khi render hiển thị trang lỗi thân thiện; riêng lỗi "file JS cũ không còn" sau khi deploy bản mới được nhận diện và gợi ý tải lại trang.
+- **Phiên hết hạn**: người đang đăng nhập bị chuyển về trang đăng nhập kèm lời giải thích (hết hạn / tài khoản bị vô hiệu hóa).
+
 ## Khôi phục mật khẩu (Milestone 8)
 
 ```text

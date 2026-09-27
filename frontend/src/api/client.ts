@@ -66,9 +66,11 @@ function refreshSession(): Promise<boolean> {
   return refreshRequest;
 }
 
-let sessionExpiredHandler: (() => void) | null = null;
+export type SessionEndReason = 'expired' | 'inactive';
 
-export function onSessionExpired(handler: () => void): void {
+let sessionExpiredHandler: ((reason: SessionEndReason) => void) | null = null;
+
+export function onSessionExpired(handler: (reason: SessionEndReason) => void): void {
   sessionExpiredHandler = handler;
 }
 
@@ -85,9 +87,9 @@ api.interceptors.response.use(undefined, async (error: unknown) => {
   ) {
     config._retried = true;
     if (await refreshSession()) return api(config);
-    sessionExpiredHandler?.();
+    sessionExpiredHandler?.('expired');
   } else if (error.response?.status === 401 && code === 'ACCOUNT_INACTIVE') {
-    sessionExpiredHandler?.();
+    sessionExpiredHandler?.('inactive');
   }
   throw error;
 });

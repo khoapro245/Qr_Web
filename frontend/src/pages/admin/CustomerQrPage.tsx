@@ -179,6 +179,7 @@ function QrManager({ customer, info }: { customer: CustomerDetail; info: Custome
           <h2 className="mb-4 text-lg font-semibold">Lịch sử mã QR</h2>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[32rem] text-left text-sm">
+              <caption className="sr-only">Lịch sử mã QR</caption>
               <thead className="text-fg-muted">
                 <tr>
                   <th scope="col" className="py-2 pr-4 font-medium">

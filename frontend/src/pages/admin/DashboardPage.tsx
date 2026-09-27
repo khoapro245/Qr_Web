@@ -53,23 +53,29 @@ export function DashboardPage() {
             className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
             aria-busy={isPending || undefined}
           >
+            {/* dl > div > (dt, dd) only: the icon lives inside the dt so the structure stays
+                valid and screen readers pair each label with its value. */}
             {STATS.map(({ key, label, Icon }) => (
-              <Card key={key} className="flex items-center gap-4">
-                <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary-soft-fg">
-                  <Icon aria-hidden="true" className="size-6" />
-                </span>
-                <div>
-                  <dt className="text-sm text-fg-muted">{label}</dt>
-                  <dd className="text-2xl font-semibold tabular-nums">
-                    {isPending ? (
-                      <span className="inline-block h-7 w-12 animate-pulse rounded bg-surface-muted">
-                        <span className="sr-only">Đang tải</span>
-                      </span>
-                    ) : (
-                      data.stats[key].toLocaleString('vi-VN')
-                    )}
-                  </dd>
-                </div>
+              // pl-* must also be set at sm: Card's own sm:p-6 would otherwise override it.
+              <Card
+                key={key}
+                className="relative flex min-h-24 flex-col justify-center pl-22 sm:pl-24"
+              >
+                <dt className="text-sm text-fg-muted">
+                  <span className="absolute left-5 top-1/2 flex size-12 -translate-y-1/2 items-center justify-center rounded-xl bg-primary-soft text-primary-soft-fg sm:left-6">
+                    <Icon aria-hidden="true" className="size-6" />
+                  </span>
+                  {label}
+                </dt>
+                <dd className="text-2xl font-semibold tabular-nums">
+                  {isPending ? (
+                    <span className="inline-block h-7 w-12 animate-pulse rounded bg-surface-muted">
+                      <span className="sr-only">Đang tải</span>
+                    </span>
+                  ) : (
+                    data.stats[key].toLocaleString('vi-VN')
+                  )}
+                </dd>
               </Card>
             ))}
           </dl>
