@@ -1,8 +1,10 @@
 import { pino } from 'pino';
 import { env } from '../config/env.js';
+import { serializeError } from './safe-error.js';
 
 export const logger = pino({
   level: env.NODE_ENV === 'test' ? 'silent' : env.LOG_LEVEL,
+  serializers: { err: serializeError },
   // Defence in depth: even if a sensitive object is logged by mistake, these keys are masked.
   redact: {
     paths: [

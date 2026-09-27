@@ -117,7 +117,13 @@ const emailOrPhoneIssue = {
   message: 'Cần ít nhất email hoặc số điện thoại để khách hàng đăng nhập',
   // Zod skips object refinements once any field is invalid. Run this one as long as email
   // and phone themselves parsed, so the form reports every problem in one go.
-  when: (payload: { issues: readonly { path?: readonly PropertyKey[] | undefined }[] }) =>
+  // The input must at least be an object: a missing or non-JSON body has no fields to check.
+  when: (payload: {
+    value: unknown;
+    issues: readonly { path?: readonly PropertyKey[] | undefined }[];
+  }) =>
+    typeof payload.value === 'object' &&
+    payload.value !== null &&
     payload.issues.every((issue) => issue.path?.[0] !== 'email' && issue.path?.[0] !== 'phone'),
 };
 

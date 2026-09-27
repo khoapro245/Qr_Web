@@ -87,15 +87,28 @@ const envSchema = z
 
 export type Env = z.output<typeof envSchema>;
 
+/**
+ * Validates a set of variables. Returns the parsed config, or the names (never the values —
+ * they may be secrets) of the invalid variables.
+ */
+export function parseEnv(
+  source: Record<string, string | undefined>,
+): { ok: true; env: Env } | { ok: false; invalid: string[] } {
+  const parsed = envSchema.safeParse(source);
+  if (parsed.success) return { ok: true, env: parsed.data };
+  return {
+    ok: false,
+    invalid: [...new Set(parsed.error.issues.map((issue) => issue.path.join('.')))],
+  };
+}
+
 function loadEnv(): Env {
-  const parsed = envSchema.safeParse(process.env);
-  if (!parsed.success) {
-    // Report only variable names, never values: they may be secrets.
-    const names = [...new Set(parsed.error.issues.map((issue) => issue.path.join('.')))];
-    console.error(`Invalid environment configuration: ${names.join(', ')}`);
+  const result = parseEnv(process.env);
+  if (!result.ok) {
+    console.error(`Invalid environment configuration: ${result.invalid.join(', ')}`);
     process.exit(1);
   }
-  return parsed.data;
+  return result.env;
 }
 
 export const env = loadEnv();

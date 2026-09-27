@@ -7,6 +7,7 @@ import { csrfProtection } from './middleware/csrf.js';
 import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
 import { httpLogger } from './middleware/http-logger.js';
 import { createRateLimiters } from './middleware/rate-limit.js';
+import { rejectNullBytes } from './middleware/reject-null-bytes.js';
 import { createApiRouter } from './routes/index.js';
 
 export interface AppOptions {
@@ -36,6 +37,7 @@ export function createApp(options: AppOptions = {}) {
   app.use(express.json({ limit: '100kb' }));
   app.use(cookieParser());
   app.use('/api', csrfProtection);
+  app.use('/api', rejectNullBytes);
 
   // API responses may contain personal data: never let browsers or proxies cache them.
   app.use('/api', (_req, res, next) => {

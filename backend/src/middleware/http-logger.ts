@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { pinoHttp } from 'pino-http';
 import { logger, redactUrl } from '../utils/logger.js';
+import { serializeError } from '../utils/safe-error.js';
 
 export const httpLogger = pinoHttp({
   logger,
@@ -18,6 +19,7 @@ export const httpLogger = pinoHttp({
       url: redactUrl(req.url),
     }),
     res: (res: { statusCode: number }) => ({ statusCode: res.statusCode }),
+    err: serializeError,
   },
   customLogLevel: (_req, res, err) => {
     if (err || res.statusCode >= 500) return 'error';
