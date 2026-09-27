@@ -13,14 +13,18 @@
   "scripts": {
     "dev": "npm run build -w shared && concurrently -k -n shared,api,web -c gray,blue,green \"npm run dev -w shared\" \"npm run dev -w backend\" \"npm run dev -w frontend\"",
     "build": "npm run build -w shared && npm run build -w backend && npm run build -w frontend",
-    "typecheck": "npm run build -w shared && npm run typecheck -w backend && npm run typecheck -w frontend",
-    "lint": "eslint .",
+    "typecheck": "npm run build -w shared && npm run typecheck -w backend && npm run typecheck -w frontend && tsc -p e2e/tsconfig.json",
+    "lint": "npm run build -w shared && eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "npm run build -w shared && npm run test -w backend && npm run test -w frontend"
+    "test": "npm run build -w shared && npm run test -w backend && npm run test -w frontend",
+    "test:coverage": "npm run build -w shared && npm run test -w backend -- --coverage && npm run test -w frontend -- --coverage",
+    "test:e2e": "playwright test -c e2e",
+    "test:e2e:report": "playwright show-report playwright-report"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
     "@types/node": "^24.19.0",
     "concurrently": "^10.0.5",
     "eslint": "^10.11.0",

@@ -138,6 +138,24 @@ describe('avatars', () => {
     expect(wrongField.status).toBe(400);
   });
 
+  it('answers a malformed multipart body with 400, not 500', async () => {
+    const truncated = await admin.agent
+      .put(`/api/admin/users/${customerId}/avatar`)
+      .set('X-CSRF-Token', admin.csrfToken)
+      .set('Content-Type', 'multipart/form-data; boundary=XYZ')
+      .send('--XYZ\r\nContent-Disposition: form-data; name="avatar"; filename="a.png"\r\n\r\ncut');
+    expect(truncated.status).toBe(400);
+    expect(truncated.body.code).toBe('INVALID_UPLOAD');
+
+    const empty = await admin.agent
+      .put(`/api/admin/users/${customerId}/avatar`)
+      .set('X-CSRF-Token', admin.csrfToken)
+      .set('Content-Type', 'multipart/form-data; boundary=XYZ')
+      .send('--XYZ--\r\n');
+    expect(empty.status).toBe(400);
+    expect(empty.body.code).toBe('FILE_REQUIRED');
+  });
+
   it('deletes the avatar and its file', async () => {
     await upload(await solidImage(200, 200).png().toBuffer());
     const res = await admin.agent

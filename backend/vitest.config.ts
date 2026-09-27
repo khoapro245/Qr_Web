@@ -27,5 +27,13 @@ export default defineConfig({
     globalSetup: ['./tests/global-setup.ts'],
     // Test files share one database, so run them one at a time.
     fileParallelism: false,
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.ts'],
+      // Entry points and CLI scripts are exercised by running them, not by unit tests.
+      exclude: ['src/server.ts', 'src/scripts/**', 'src/types/**'],
+      reporter: ['text-summary', 'text', 'html'],
+      reportsDirectory: 'coverage',
+    },
   },
 });

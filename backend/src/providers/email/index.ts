@@ -1,5 +1,5 @@
-import nodemailer from 'nodemailer';
-import { env } from '../../config/env.js';
+import nodemailer, { type Transporter } from 'nodemailer';
+import { env, type Env } from '../../config/env.js';
 import { deliverToDevOutbox } from '../dev-outbox.js';
 
 export interface EmailMessage {
@@ -13,6 +13,17 @@ export interface EmailProvider {
   send(message: EmailMessage): Promise<void>;
 }
 
+export type EmailConfig = Pick<
+  Env,
+  | 'EMAIL_PROVIDER'
+  | 'EMAIL_FROM'
+  | 'SMTP_HOST'
+  | 'SMTP_PORT'
+  | 'SMTP_SECURE'
+  | 'SMTP_USER'
+  | 'SMTP_PASS'
+>;
+
 class ConsoleEmailProvider implements EmailProvider {
   readonly enabled = true;
   send(message: EmailMessage): Promise<void> {
@@ -24,15 +35,21 @@ class ConsoleEmailProvider implements EmailProvider {
 /** Any SMTP service (Gmail Workspace, SES, SendGrid, Mailgun...) without vendor lock-in. */
 class SmtpEmailProvider implements EmailProvider {
   readonly enabled = true;
-  private readonly transport = nodemailer.createTransport({
-    host: env.SMTP_HOST,
-    port: env.SMTP_PORT,
-    secure: env.SMTP_SECURE,
-    ...(env.SMTP_USER && { auth: { user: env.SMTP_USER, pass: env.SMTP_PASS } }),
-  });
+  private readonly from: string;
+  private readonly transport: Transporter;
+
+  constructor(config: EmailConfig) {
+    this.from = config.EMAIL_FROM;
+    this.transport = nodemailer.createTransport({
+      host: config.SMTP_HOST,
+      port: config.SMTP_PORT,
+      secure: config.SMTP_SECURE,
+      ...(config.SMTP_USER && { auth: { user: config.SMTP_USER, pass: config.SMTP_PASS } }),
+    });
+  }
 
   async send(message: EmailMessage): Promise<void> {
-    await this.transport.sendMail({ from: env.EMAIL_FROM, ...message });
+    await this.transport.sendMail({ from: this.from, ...message });
   }
 }
 
@@ -43,15 +60,15 @@ class DisabledEmailProvider implements EmailProvider {
   }
 }
 
-function createEmailProvider(): EmailProvider {
-  switch (env.EMAIL_PROVIDER) {
+export function createEmailProvider(config: EmailConfig): EmailProvider {
+  switch (config.EMAIL_PROVIDER) {
     case 'console':
       return new ConsoleEmailProvider();
     case 'smtp':
-      return new SmtpEmailProvider();
+      return new SmtpEmailProvider(config);
     case 'disabled':
       return new DisabledEmailProvider();
   }
 }
 
-export const emailProvider = createEmailProvider();
+export const emailProvider = createEmailProvider(env);

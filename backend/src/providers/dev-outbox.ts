@@ -1,3 +1,5 @@
+import { appendFileSync } from 'node:fs';
+import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 
 export interface OutboxMessage {
@@ -17,8 +19,11 @@ const messages: OutboxMessage[] = [];
  * The console providers that use this are refused in production (see config/env.ts).
  */
 export function deliverToDevOutbox(message: Omit<OutboxMessage, 'sentAt'>): void {
-  messages.push({ ...message, sentAt: new Date() });
+  const entry = { ...message, sentAt: new Date() };
+  messages.push(entry);
   if (messages.length > MAX_MESSAGES) messages.shift();
+  // End-to-end tests read OTPs from here (the setting is refused in production).
+  if (env.DEV_OUTBOX_FILE) appendFileSync(env.DEV_OUTBOX_FILE, `${JSON.stringify(entry)}\n`);
   logger.warn(
     { devOutbox: { channel: message.channel, to: message.to, subject: message.subject } },
     `[DEV ${message.channel}] ${message.text}`,

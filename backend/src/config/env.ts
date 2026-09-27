@@ -53,6 +53,8 @@ const envSchema = z
 
     // No production SMS gateway has been chosen yet; see docs/architecture.md.
     SMS_PROVIDER: z.enum(['console', 'disabled']).default('console'),
+    // End-to-end tests only: console providers also append messages (with OTPs) to this file.
+    DEV_OUTBOX_FILE: z.string().min(1).optional(),
   })
   .superRefine((value, ctx) => {
     if (value.EMAIL_PROVIDER === 'smtp' && !value.SMTP_HOST) {
@@ -70,6 +72,9 @@ const envSchema = z
     }
     if (value.SMS_PROVIDER === 'console') {
       ctx.addIssue({ code: 'custom', path: ['SMS_PROVIDER'], message: 'console not allowed' });
+    }
+    if (value.DEV_OUTBOX_FILE) {
+      ctx.addIssue({ code: 'custom', path: ['DEV_OUTBOX_FILE'], message: 'test-only setting' });
     }
     if (!value.PUBLIC_QR_BASE_URL?.startsWith('https://')) {
       ctx.addIssue({

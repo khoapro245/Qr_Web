@@ -1,0 +1,99 @@
+# Runs on every push to main and every pull request. A red ❌ on GitHub means something broke.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A newer push to the same branch cancels the older, now-irrelevant run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # CI-only throwaway values; nothing here is a real secret. The database password
+  # "ci_only_password" is written inline below because service containers cannot read `env`.
+  JWT_ACCESS_SECRET: ci-only-jwt-secret-not-a-real-secret-0000000000
+  OTP_SECRET: ci-only-otp-secret-not-a-real-secret-0000000000
+
+jobs:
+  quality:
+    name: Lint, types, unit & integration tests, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: qrcare
+          POSTGRES_PASSWORD: ci_only_password
+          POSTGRES_DB: qrcare_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U qrcare -d qrcare_test"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      TEST_DATABASE_URL: postgres://qrcare:ci_only_password@localhost:5432/qrcare_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Formatting
+        run: npm run format:check
+      - name: Lint
+        run: npm run lint
+      - name: Type check
+        run: npm run typecheck
+      - name: Unit & integration tests (with coverage)
+        run: npm run test:coverage
+      - name: Production build
+        run: npm run build
+      - name: Known vulnerabilities in production dependencies
+        run: npm audit --omit=dev --audit-level=moderate
+
+  e2e:
+    name: End-to-end tests (real browser)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: qrcare
+          POSTGRES_PASSWORD: ci_only_password
+          POSTGRES_DB: qrcare_e2e
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U qrcare -d qrcare_e2e"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      E2E_DATABASE_URL: postgres://qrcare:ci_only_password@localhost:5432/qrcare_e2e
+      # Use Playwright's bundled Chromium (no Microsoft Edge on the Linux runner).
+      PW_CHANNEL: ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+      - name: End-to-end tests
+        run: npm run test:e2e
+      - name: Keep the report when something fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

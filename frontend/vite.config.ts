@@ -52,5 +52,12 @@ export default defineConfig({
     setupFiles: ['./tests/setup.ts'],
     testTimeout: 15_000,
     include: ['tests/**/*.test.{ts,tsx}'],
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/main.tsx', 'src/**/*.d.ts'],
+      reporter: ['text-summary', 'text', 'html'],
+      reportsDirectory: 'coverage',
+    },
   },
 });

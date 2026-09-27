@@ -1,4 +1,4 @@
-import { env } from '../../config/env.js';
+import { env, type Env } from '../../config/env.js';
 import { deliverToDevOutbox } from '../dev-outbox.js';
 
 export interface SmsProvider {
@@ -24,8 +24,8 @@ class DisabledSmsProvider implements SmsProvider {
 
 // A production gateway (e.g. a Vietnamese brandname SMS provider) is added here as another
 // SmsProvider once it has been chosen.
-function createSmsProvider(): SmsProvider {
-  switch (env.SMS_PROVIDER) {
+export function createSmsProvider(config: Pick<Env, 'SMS_PROVIDER'>): SmsProvider {
+  switch (config.SMS_PROVIDER) {
     case 'console':
       return new ConsoleSmsProvider();
     case 'disabled':
@@ -33,4 +33,4 @@ function createSmsProvider(): SmsProvider {
   }
 }
 
-export const smsProvider = createSmsProvider();
+export const smsProvider = createSmsProvider(env);

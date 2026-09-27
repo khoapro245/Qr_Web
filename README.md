@@ -1,8 +1,10 @@
 # QR Care
 
+[![CI](https://github.com/HaiDang193/Qr_Web/actions/workflows/ci.yml/badge.svg)](https://github.com/HaiDang193/Qr_Web/actions/workflows/ci.yml)
+
 Hệ thống thông tin cá nhân qua mã QR gắn trên áo. Mỗi áo có một mã QR riêng; ai quét mã đều xem được thông tin hỗ trợ (được phép công khai) của người mặc mà không cần đăng nhập.
 
-> Trạng thái: đang phát triển — đã xong Milestone 1–10 (khởi tạo, database, đăng nhập, quản lý khách hàng, ảnh đại diện, mã QR, trang QR công khai, khôi phục mật khẩu, hoàn thiện giao diện, rà soát bảo mật).
+> Trạng thái: đang phát triển — đã xong Milestone 1–11 (khởi tạo, database, đăng nhập, quản lý khách hàng, ảnh đại diện, mã QR, trang QR công khai, khôi phục mật khẩu, hoàn thiện giao diện, rà soát bảo mật, kiểm thử & QA).
 > Kiến trúc và các quyết định: [docs/architecture.md](docs/architecture.md) · API: [docs/api.md](docs/api.md).
 
 ## Công nghệ
@@ -85,14 +87,16 @@ Mở http://localhost:5173 và đăng nhập bằng email admin cùng mật kh�
 
 ## Scripts
 
-| Lệnh                | Tác dụng                                          |
-| ------------------- | ------------------------------------------------- |
-| `npm run dev`       | Chạy shared (watch), backend và frontend cùng lúc |
-| `npm run build`     | Build production cho cả 3 workspace               |
-| `npm run typecheck` | Kiểm tra kiểu TypeScript                          |
-| `npm run lint`      | ESLint (có type-aware rules)                      |
-| `npm run format`    | Định dạng code bằng Prettier                      |
-| `npm test`          | Chạy toàn bộ test backend + frontend              |
+| Lệnh                    | Tác dụng                                                                       |
+| ----------------------- | ------------------------------------------------------------------------------ |
+| `npm run dev`           | Chạy shared (watch), backend và frontend cùng lúc                              |
+| `npm run build`         | Build production cho cả 3 workspace                                            |
+| `npm run typecheck`     | Kiểm tra kiểu TypeScript                                                       |
+| `npm run lint`          | ESLint (có type-aware rules)                                                   |
+| `npm run format`        | Định dạng code bằng Prettier                                                   |
+| `npm test`              | Chạy toàn bộ test backend + frontend                                           |
+| `npm run test:coverage` | Test kèm báo cáo độ bao phủ                                                    |
+| `npm run test:e2e`      | Test end-to-end bằng trình duyệt thật (xem [docs/testing.md](docs/testing.md)) |
 
 ## Bảo mật
 

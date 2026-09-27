@@ -314,6 +314,7 @@ describe('security: production configuration', () => {
     ],
     ['missing QR domain', { PUBLIC_QR_BASE_URL: undefined }, 'PUBLIC_QR_BASE_URL'],
     ['SMTP without host', { SMTP_HOST: undefined }, 'SMTP_HOST'],
+    ['the test-only OTP file', { DEV_OUTBOX_FILE: '/tmp/outbox.jsonl' }, 'DEV_OUTBOX_FILE'],
   ])('refuses to start with %s', (_label, override, variable) => {
     const result = parseEnv({ ...production, ...override });
     expect(result.ok).toBe(false);

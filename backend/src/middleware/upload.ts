@@ -21,14 +21,13 @@ export const avatarUpload: RequestHandler = (req, res, next) => {
       next();
       return;
     }
-    if (err instanceof multer.MulterError) {
-      next(
-        err.code === 'LIMIT_FILE_SIZE'
-          ? new AppError(413, 'FILE_TOO_LARGE', 'Image must be at most 5 MB')
-          : new AppError(400, 'INVALID_UPLOAD', 'Invalid upload'),
-      );
+    if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+      next(new AppError(413, 'FILE_TOO_LARGE', 'Image must be at most 5 MB'));
       return;
     }
-    next(err);
+    // Everything else here is a malformed request: multer limit errors, or parser errors from
+    // busboy ("Unexpected end of form", bad part headers) that are not MulterErrors. Either
+    // way it is the client's fault, never a 500.
+    next(new AppError(400, 'INVALID_UPLOAD', 'Invalid upload'));
   });
 };
