@@ -1,0 +1,59 @@
+# Production stack for a single server (VPS): the app + PostgreSQL, with persistent volumes.
+# TLS is terminated in front of it (nginx example in deploy/nginx.conf, or your platform).
+#
+#   cp deploy/production.env.example deploy/production.env   # then fill in real values
+#   docker compose --env-file deploy/production.env -f deploy/compose.yml up -d --build
+#
+# The same file provides container settings (env_file) and ${...} values below (--env-file).
+# See docs/deployment.md for the full procedure.
+name: qrcare-prod
+
+# Rotate container logs so a long-running server never fills its disk (~50 MB per service).
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: '5'
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: qrcare:latest
+    restart: unless-stopped
+    env_file: ./production.env
+    environment:
+      # The database container below; its password comes from production.env.
+      DATABASE_URL: postgres://qrcare:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/production.env}@db:5432/qrcare
+    ports:
+      # Only reachable from the server itself; the TLS proxy forwards to it.
+      - '127.0.0.1:${APP_PORT:-4000}:4000'
+    volumes:
+      - storage:/data/storage
+    depends_on:
+      db:
+        condition: service_healthy
+    stop_grace_period: 15s
+    logging: *logging
+
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: qrcare
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/production.env}
+      POSTGRES_DB: qrcare
+    volumes:
+      - db:/var/lib/postgresql/data
+    # Not published on the host at all: only the app container can reach it.
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U qrcare -d qrcare']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    logging: *logging
+
+volumes:
+  db:
+  storage:

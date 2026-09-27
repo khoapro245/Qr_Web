@@ -1,0 +1,16 @@
+# Keep the build context small and free of secrets and local data.
+**/node_modules
+**/dist
+**/coverage
+.git
+.github
+docs
+e2e
+playwright-report
+test-results
+backend/storage
+**/.env
+**/.env.*
+!**/.env.example
+deploy/production.env
+*.log

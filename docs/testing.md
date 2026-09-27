@@ -18,7 +18,7 @@ npm run test:e2e:report # mở báo cáo HTML của lần chạy E2E gần nhấ
 ## Backend (`backend/tests`)
 
 - Chạy trên database `qrcare_test` (`TEST_DATABASE_URL`). Bộ test **từ chối chạy** nếu tên database không kết thúc bằng `_test`, vì mỗi test xóa sạch dữ liệu.
-- Bao phủ: xác thực và phiên, phân quyền, quản lý khách hàng, ảnh (giải mã/EXIF), vòng đời QR (kể cả đồng thời), trang công khai, OTP (kể cả đoán song song), cấu hình production, tấn công (`security.test.ts` tự dò **mọi route** để kiểm tra phân quyền và CSRF), SMTP thật với server giả.
+- Bao phủ: xác thực và phiên, phân quyền, quản lý khách hàng, ảnh (giải mã/EXIF), vòng đời QR (kể cả đồng thời), trang công khai, OTP (kể cả đoán song song), cấu hình production, phục vụ giao diện ở production và dọn dẹp tự động (`production.test.ts`), tấn công (`security.test.ts` tự dò **mọi route** để kiểm tra phân quyền và CSRF), SMTP thật với server giả.
 - Độ bao phủ: ~96% dòng, ~84% nhánh.
 
 ## Frontend (`frontend/tests`)
@@ -56,9 +56,10 @@ Kịch bản (17 test, trong đó trang QR công khai chạy cả trên màn hì
 
 ## CI (GitHub Actions)
 
-Mỗi push lên `main` và mỗi pull request chạy hai job song song:
+Mỗi push lên `main` và mỗi pull request chạy ba job song song:
 
 1. **quality**: format → lint → typecheck → test + coverage → build → `npm audit` (dependency production, mức moderate trở lên).
 2. **e2e**: Playwright với Chromium; khi thất bại, báo cáo và ảnh chụp được lưu thành artifact 7 ngày.
+3. **docker**: build image production từ `Dockerfile`, chạy container với cấu hình production thật (kèm PostgreSQL), kiểm tra health, giao diện, header bảo mật và script tạo admin — để `Dockerfile` không thể hỏng mà không ai biết.
 
 Trước khi đưa vào dự án, workflow đã được **giả lập trên một bản clone sạch** (không `.env`, `npm ci` từ lockfile). Lần giả lập đó phát hiện `npm run lint` hỏng trên clone mới (thiếu `shared/dist`) — đã sửa bằng cách build `shared` trước khi lint.

@@ -13,6 +13,19 @@ const postgresUrl = z
 
 const secret = z.string().min(32, 'must be at least 32 characters');
 
+// Values copied unchanged from .env.example / deploy/production.env.example.
+function isPlaceholder(value: string): boolean {
+  return /change-me|^change-/i.test(value);
+}
+
+function databasePassword(url: string): string {
+  try {
+    return decodeURIComponent(new URL(url).password);
+  } catch {
+    return '';
+  }
+}
+
 const envSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -26,6 +39,10 @@ const envSchema = z
     // production this must be a domain that will be kept for the lifetime of the shirts.
     PUBLIC_QR_BASE_URL: z.url().optional(),
     TRUST_PROXY: z.coerce.number().int().min(0).default(0),
+    // Production: the built frontend (frontend/dist) served by this same process.
+    FRONTEND_DIST_DIR: z.string().min(1).optional(),
+    // Used by dist/scripts/start-production.js (the container entry point).
+    MIGRATE_ON_START: z.stringbool().default(true),
 
     DATABASE_URL: postgresUrl,
     DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(100).default(10),
@@ -62,9 +79,19 @@ const envSchema = z
     }
     if (value.NODE_ENV !== 'production') return;
     for (const key of ['JWT_ACCESS_SECRET', 'OTP_SECRET'] as const) {
-      if (/change-me/i.test(value[key])) {
+      if (isPlaceholder(value[key])) {
         ctx.addIssue({ code: 'custom', path: [key], message: 'placeholder secret in production' });
       }
+    }
+    if (value.JWT_ACCESS_SECRET === value.OTP_SECRET) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['OTP_SECRET'],
+        message: 'must differ from JWT secret',
+      });
+    }
+    if (isPlaceholder(databasePassword(value.DATABASE_URL))) {
+      ctx.addIssue({ code: 'custom', path: ['DATABASE_URL'], message: 'placeholder password' });
     }
     // Console providers write OTPs to the logs — never acceptable in production.
     if (value.EMAIL_PROVIDER === 'console') {

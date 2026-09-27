@@ -304,6 +304,17 @@ describe('security: production configuration', () => {
       { JWT_ACCESS_SECRET: 'change-me-to-a-long-random-secret-at-least-32' },
       'JWT_ACCESS_SECRET',
     ],
+    [
+      'the unchanged deploy example secret',
+      { OTP_SECRET: 'CHANGE-generate-another-random-value-of-64-characters' },
+      'OTP_SECRET',
+    ],
+    ['the same key for sessions and OTPs', { OTP_SECRET: 'a'.repeat(48) }, 'OTP_SECRET'],
+    [
+      'the unchanged deploy example database password',
+      { DATABASE_URL: 'postgres://qrcare:CHANGE-generate-a-random-value@db:5432/qrcare' },
+      'DATABASE_URL',
+    ],
     ['short OTP secret', { OTP_SECRET: 'short' }, 'OTP_SECRET'],
     ['OTPs printed to logs (email)', { EMAIL_PROVIDER: 'console' }, 'EMAIL_PROVIDER'],
     ['OTPs printed to logs (SMS)', { SMS_PROVIDER: 'console' }, 'SMS_PROVIDER'],

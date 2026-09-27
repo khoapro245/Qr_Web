@@ -5,7 +5,7 @@ Tài liệu này ghi lại kiến trúc và các quyết định đã được d
 ## Tổng quan
 
 ```text
-Browser ──► Frontend (React SPA)  ─┐   cùng domain: /api được reverse-proxy tới backend
+Browser ──► Frontend (React SPA)  ─┐   cùng domain; production: backend phục vụ luôn SPA đã build
                                    ├─► Backend (Express 5 + TypeScript) ──► PostgreSQL
 Dev: Vite proxy /api → :4000      ─┘         ├─► StorageProvider (Local, S3-compatible sau này)
                                              ├─► EmailProvider   (Console | SMTP)
@@ -169,6 +169,16 @@ Người quét ──► /qr/<token> (SPA, không cần đăng nhập)
 - Bản ghi OTP cũ hơn 24 giờ của một tài khoản được xóa mỗi khi tài khoản đó yêu cầu mã mới.
 - OTP 6 số (`crypto.randomInt`), lưu HMAC-SHA256, hết hạn 10 phút, tối đa 5 lần thử, gửi lại sau 60 giây. Xác thực OTP xong → cấp reset token ngắn hạn.
 - QR token: 128-bit `crypto.randomBytes` → base64url (22 ký tự). QR in ECC mức Q.
+
+## Production (Milestone 12)
+
+- **Một container, một origin**: `Dockerfile` build cả 3 workspace rồi chỉ giữ code đã build + dependency runtime (không có Vite, TypeScript, công cụ test). Backend phục vụ `frontend/dist` khi có `FRONTEND_DIST_DIR`: file trong `/assets` (tên có hash) cache 1 năm `immutable`; `index.html` luôn `no-cache` để bản mới có hiệu lực ngay; đường dẫn không phải file (`/admin/users`, `/qr/…`) trả `index.html`; file tĩnh không tồn tại trả 404 JSON (không trả nhầm `index.html`).
+- **Header**: API giữ CSP `default-src 'none'`; giao diện nhận CSP riêng (`script-src 'self'`, không `unsafe-inline`, `frame-ancestors 'none'`) cùng HSTS, `nosniff`, `no-referrer`, `X-Robots-Tag: noindex`. Nén gzip cho mọi phản hồi phù hợp.
+- **Khởi động**: `dist/scripts/start-production.js` chạy migration (`MIGRATE_ON_START`, lỗi → thoát, không phục vụ với schema cũ) rồi mới mở cổng. Chạy dưới user `node` (không phải root), Docker `HEALTHCHECK` gọi `/api/health`.
+- **Dừng an toàn**: `SIGTERM` → ngừng nhận kết nối mới, chờ request đang chạy, đóng pool DB; quá 10 giây thì thoát cưỡng bức.
+- **Dọn dẹp tự động** (mỗi 6 giờ + lúc khởi động): xóa refresh token đã hết hạn hoặc thu hồi quá 30 ngày, OTP cũ hơn 1 ngày — bảng không phình mãi và không giữ dữ liệu phiên lâu hơn cần thiết.
+- **Cấu hình fail-closed**: ngoài các kiểm tra từ M8/M10, production từ chối secret mẫu `CHANGE-…`, hai secret trùng nhau, mật khẩu DB mẫu.
+- **Triển khai tham khảo**: `deploy/compose.yml` (app + PostgreSQL, DB không mở cổng, app chỉ nghe `127.0.0.1`, log xoay vòng), `deploy/nginx.conf` (TLS), `deploy/backup.sh`. Đã chạy thử toàn bộ ở chế độ production thật: hơn 40 kiểm tra hộp đen, trình duyệt thật, dừng/khởi động lại giữ dữ liệu, sao lưu → khôi phục. Chi tiết: [deployment.md](deployment.md), [operations.md](operations.md).
 
 ## Database (dự kiến, chi tiết ở Milestone 2)
 

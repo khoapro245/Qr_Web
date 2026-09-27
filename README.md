@@ -4,8 +4,8 @@
 
 Hệ thống thông tin cá nhân qua mã QR gắn trên áo. Mỗi áo có một mã QR riêng; ai quét mã đều xem được thông tin hỗ trợ (được phép công khai) của người mặc mà không cần đăng nhập.
 
-> Trạng thái: đang phát triển — đã xong Milestone 1–11 (khởi tạo, database, đăng nhập, quản lý khách hàng, ảnh đại diện, mã QR, trang QR công khai, khôi phục mật khẩu, hoàn thiện giao diện, rà soát bảo mật, kiểm thử & QA).
-> Kiến trúc và các quyết định: [docs/architecture.md](docs/architecture.md) · API: [docs/api.md](docs/api.md).
+> Trạng thái: đã xong Milestone 1–12 (khởi tạo, database, đăng nhập, quản lý khách hàng, ảnh đại diện, mã QR, trang QR công khai, khôi phục mật khẩu, hoàn thiện giao diện, rà soát bảo mật, kiểm thử & QA, chuẩn bị production). Chưa triển khai lên máy chủ thật.
+> Kiến trúc: [docs/architecture.md](docs/architecture.md) · API: [docs/api.md](docs/api.md) · Kiểm thử: [docs/testing.md](docs/testing.md) · Triển khai: [docs/deployment.md](docs/deployment.md) · Vận hành: [docs/operations.md](docs/operations.md).
 
 ## Công nghệ
 
@@ -22,7 +22,9 @@ Hệ thống thông tin cá nhân qua mã QR gắn trên áo. Mỗi áo có mộ
 ├── backend/    API Express (src/, tests/)
 ├── frontend/   React SPA (src/, tests/)
 ├── shared/     Enum + schema validate dùng chung cho backend và frontend
-└── docs/       Tài liệu kiến trúc, API, triển khai
+├── e2e/        Test end-to-end (Playwright)
+├── deploy/     Docker Compose production, mẫu nginx, script sao lưu
+└── docs/       Tài liệu kiến trúc, API, kiểm thử, triển khai, vận hành
 ```
 
 ## Chạy ở máy local
@@ -83,7 +85,7 @@ Mở http://localhost:5173 và đăng nhập bằng email admin cùng mật kh�
 
 - Muốn tự đặt mật khẩu admin thay vì sinh ngẫu nhiên: đặt biến `ADMIN_PASSWORD` (≥ 12 ký tự) trước khi chạy lệnh seed.
 - Test tự động dùng database `qrcare_test` (`TEST_DATABASE_URL`) và **xóa toàn bộ dữ liệu** trong đó; bộ test từ chối chạy nếu tên database không kết thúc bằng `_test`.
-- Production: chạy `node dist/scripts/migrate.js` trong thư mục `backend` sau mỗi lần deploy.
+- Production: container tự chạy migration khi khởi động (xem [docs/deployment.md](docs/deployment.md)).
 
 ## Scripts
 
@@ -98,8 +100,21 @@ Mở http://localhost:5173 và đăng nhập bằng email admin cùng mật kh�
 | `npm run test:coverage` | Test kèm báo cáo độ bao phủ                                                    |
 | `npm run test:e2e`      | Test end-to-end bằng trình duyệt thật (xem [docs/testing.md](docs/testing.md)) |
 
+## Production
+
+Một container Node phục vụ cả API lẫn giao diện đã build, cùng PostgreSQL, sau reverse proxy HTTPS:
+
+```bash
+cp deploy/production.env.example deploy/production.env   # điền domain, secret, SMTP
+docker compose --env-file deploy/production.env -f deploy/compose.yml up -d --build
+```
+
+Hướng dẫn đầy đủ (máy chủ, HTTPS, admin đầu tiên, cập nhật, biến môi trường): [docs/deployment.md](docs/deployment.md). Sao lưu, khôi phục, giám sát, xử lý sự cố: [docs/operations.md](docs/operations.md).
+
+> Link trong QR được in lên áo và không sửa được — phải chốt domain lâu dài (`PUBLIC_QR_BASE_URL`) trước khi in áo thật.
+
 ## Bảo mật
 
 - Ảnh đại diện lưu ở `backend/storage/` (đã có trong `.gitignore`) — cần sao lưu thư mục này cùng với database.
-- Không bao giờ commit file `.env`. Chỉ `.env.example` (giá trị giả) được đưa lên Git.
+- Không bao giờ commit file `.env` hay `deploy/production.env`. Chỉ các file `*.example` (giá trị giả) được đưa lên Git.
 - Xem thêm các biện pháp bảo mật trong [docs/architecture.md](docs/architecture.md) và bảng đối chiếu [docs/security-checklist.md](docs/security-checklist.md).

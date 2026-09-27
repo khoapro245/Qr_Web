@@ -97,3 +97,48 @@ jobs:
             playwright-report/
             test-results/
           retention-days: 7
+
+  docker:
+    name: Production image (build + smoke test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: qrcare
+          POSTGRES_PASSWORD: ci_only_password
+          POSTGRES_DB: qrcare
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U qrcare -d qrcare"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the image
+        run: docker build -t qrcare:ci .
+      - name: Start it with a production configuration
+        # Same checks as a real server: the app refuses to start if the configuration is unsafe.
+        run: |
+          docker run -d --name app --network host \
+            -e HOST=127.0.0.1 \
+            -e DATABASE_URL=postgres://qrcare:ci_only_password@127.0.0.1:5432/qrcare \
+            -e APP_ORIGIN=http://localhost:4000 \
+            -e PUBLIC_QR_BASE_URL=https://qrcare.example.vn \
+            -e JWT_ACCESS_SECRET="$(openssl rand -hex 32)" \
+            -e OTP_SECRET="$(openssl rand -hex 32)" \
+            -e EMAIL_PROVIDER=disabled -e SMS_PROVIDER=disabled \
+            qrcare:ci
+      - name: Smoke test
+        run: |
+          for i in $(seq 1 30); do curl -fs http://127.0.0.1:4000/api/health > /dev/null && break; sleep 1; done
+          curl -fs http://127.0.0.1:4000/api/health | grep -q '"database":"up"'
+          curl -fs http://127.0.0.1:4000/admin/users | grep -q '<div id="root">'
+          curl -fsI http://127.0.0.1:4000/login | grep -qi "content-security-policy: default-src 'self'"
+          curl -fsI http://127.0.0.1:4000/login | grep -qi "frame-ancestors 'none'"
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:4000/assets/missing.js)" = 404
+          docker exec app node dist/scripts/seed-admin.js admin@ci.example.vn > /dev/null
+          echo "Production image OK"
+      - name: Container logs
+        if: always()
+        run: docker logs app
