@@ -6,6 +6,7 @@ export interface RateLimiters {
   login: RequestHandler;
   refresh: RequestHandler;
   sensitive: RequestHandler;
+  publicQr: RequestHandler;
 }
 
 const passThrough: RequestHandler = (_req, _res, next) => next();
@@ -35,12 +36,21 @@ const MINUTE = 60 * 1000;
  */
 export function createRateLimiters(enabled: boolean): RateLimiters {
   if (!enabled) {
-    return { api: passThrough, login: passThrough, refresh: passThrough, sensitive: passThrough };
+    return {
+      api: passThrough,
+      login: passThrough,
+      refresh: passThrough,
+      sensitive: passThrough,
+      publicQr: passThrough,
+    };
   }
   return {
     api: limiter(MINUTE, 300),
     login: limiter(15 * MINUTE, 20),
     refresh: limiter(15 * MINUTE, 120),
     sensitive: limiter(15 * MINUTE, 10),
+    // A real scan costs two requests (profile + photo). Tokens are unguessable, so this
+    // mainly stops scripted hammering; it stays generous for shared networks.
+    publicQr: limiter(MINUTE, 60),
   };
 }

@@ -1,5 +1,5 @@
 import type { CustomerQrInfo, QrCodeView } from '@qrcare/shared';
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import { http } from 'msw';
 import { describe, expect, it } from 'vitest';
 import { adminUser, customerDetail, signedInAs } from './fixtures';
@@ -47,7 +47,8 @@ describe('QR management', () => {
     const preview = await screen.findByRole('img', { name: 'Mã QR của Nguyễn Văn A' });
     expect(preview.getAttribute('src')).toContain(`/api/admin/users/${id}/qr/image?`);
     await user.click(screen.getByRole('link', { name: 'Quản lý mã QR' }));
-    expect(router.state.location.pathname).toBe(`/admin/users/${id}/qr`);
+    // Pages are lazy-loaded, so navigation completes once the page code has loaded.
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/admin/users/${id}/qr`));
   });
 
   it('shows the current code with its link, downloads and history', async () => {

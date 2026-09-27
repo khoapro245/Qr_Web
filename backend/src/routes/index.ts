@@ -5,6 +5,7 @@ import type { RateLimiters } from '../middleware/rate-limit.js';
 import { createAdminRouter } from './admin.routes.js';
 import { createAuthRouter } from './auth.routes.js';
 import { createMeRouter } from './me.routes.js';
+import { createPublicQrRouter } from './public.routes.js';
 
 export function createApiRouter(limiters: RateLimiters): Router {
   const api = Router();
@@ -18,6 +19,7 @@ export function createApiRouter(limiters: RateLimiters): Router {
   });
 
   api.use('/auth', createAuthRouter(limiters));
+  api.use('/qr', createPublicQrRouter(limiters));
   api.use(
     '/admin',
     authenticate,

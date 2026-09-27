@@ -13,6 +13,9 @@ export type BloodGroup = (typeof BLOOD_GROUPS)[number];
 export const QR_STATUSES = ['ACTIVE', 'REVOKED'] as const;
 export type QrStatus = (typeof QR_STATUSES)[number];
 
+/** 16 random bytes, base64url-encoded. */
+export const QR_TOKEN_PATTERN = /^[A-Za-z0-9_-]{22}$/;
+
 export const AVATAR_MAX_BYTES = 5 * 1024 * 1024;
 export const AVATAR_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
 /** Smallest accepted source image side; smaller photos look blurry on the QR page. */

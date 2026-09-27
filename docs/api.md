@@ -78,6 +78,23 @@ Body tạo khách hàng:
 
 `password` rỗng → hệ thống tự sinh. Tuổi **không** nhận từ client — luôn tính từ `dateOfBirth`.
 
+## Trang QR công khai — `/api/qr` (không cần đăng nhập)
+
+| Method | Path             | Mô tả                                                   |
+| ------ | ---------------- | ------------------------------------------------------- |
+| GET    | `/:token`        | `{ profile }` — chỉ các trường công khai (xem bên dưới) |
+| GET    | `/:token/avatar` | Ảnh đại diện (`image/webp`)                             |
+
+`profile` có **đúng** các trường: `fullName`, `dateOfBirth`, `age`, `gender`, `address`, `familyPhone`, `bloodGroup`, `weightKg`, `heightCm`, `avatarUrl`. Không có id, email/SĐT đăng nhập, trạng thái tài khoản hay bất kỳ trường nào khác.
+
+Hiển thị khi và chỉ khi: mã QR `ACTIVE` **và** tài khoản khách hàng `ACTIVE` **và** đã có đồng ý công khai. Mọi trường hợp khác (token sai định dạng, không tồn tại, đã thu hồi, tài khoản bị vô hiệu hóa) trả **cùng một** response:
+
+```json
+{ "success": false, "code": "QR_NOT_FOUND", "message": "QR code is invalid or has been revoked" }
+```
+
+Header: `X-Robots-Tag: noindex, nofollow, noarchive`, `Cache-Control: no-store`, `Referrer-Policy: no-referrer`. Giới hạn 60 request/phút/IP. Không có endpoint liệt kê hay tìm kiếm.
+
 ## Khách hàng — `/api/me` (vai trò CUSTOMER, đã đổi mật khẩu mặc định)
 
 | Method | Path       | Mô tả                                                                                  |

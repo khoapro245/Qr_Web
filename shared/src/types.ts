@@ -34,6 +34,23 @@ export interface CustomerProfileView {
   avatarVersion: string | null;
 }
 
+/**
+ * Everything a person scanning a QR code may see — an explicit whitelist (spec §20).
+ * No ids, login email/phone, account status or anything else ever leaves through this type.
+ */
+export interface PublicProfile {
+  fullName: string;
+  dateOfBirth: string;
+  age: number;
+  gender: Gender;
+  address: string | null;
+  familyPhone: string;
+  bloodGroup: BloodGroup;
+  weightKg: number | null;
+  heightCm: number | null;
+  avatarUrl: string | null;
+}
+
 /** One row of the admin customer list. */
 export interface CustomerSummary {
   id: string;

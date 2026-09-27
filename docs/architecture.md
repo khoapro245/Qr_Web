@@ -116,6 +116,27 @@ Thu hồi        ──► [transaction, khóa dòng users của khách] ACTIVE 
 - **`PUBLIC_QR_BASE_URL` bắt buộc (https) ở production** — server từ chối khởi động nếu thiếu. Domain này in vĩnh viễn lên áo.
 - **In ấn**: trang quản lý QR có nút "In" với bố cục in riêng (chỉ QR 9cm + tên), luôn in màu sáng.
 
+## Trang QR công khai (Milestone 7)
+
+```text
+Người quét ──► /qr/<token> (SPA, không cần đăng nhập)
+               └► GET /api/qr/<token>
+                  ├ token sai định dạng ─────────────────────────┐
+                  └► JOIN qr_codes ⋈ users ⋈ customer_profiles    │
+                     WHERE qr.status = ACTIVE                     ├─► 404 QR_NOT_FOUND (giống hệt nhau)
+                       AND users.role = CUSTOMER                  │
+                       AND users.status = ACTIVE                  │
+                       AND public_consent_at IS NOT NULL ── không có dòng ┘
+                     └► whitelist 10 trường → 200
+```
+
+- **Whitelist tường minh**: `PublicProfile` trong `shared` và hàm dựng copy từng trường theo tên. Test khẳng định danh sách key chính xác và không có email/SĐT đăng nhập/id.
+- **Không phân biệt lý do lỗi**: người quét không biết mã có tồn tại, bị thu hồi hay tài khoản bị khóa.
+- **Không đọc cookie/phiên** ở các route công khai — người đang đăng nhập cũng chỉ là khách vãng lai ở đây.
+- **Trang tối giản** theo spec: không đăng nhập, không điều hướng, không tìm kiếm. Liên kết duy nhất là SĐT gia đình dạng `tel:` (bấm để gọi trên điện thoại). Khi mã không hiển thị được, trang gợi ý số khẩn cấp 115/113 để người muốn giúp không bị bế tắc.
+- **Tải nhanh**: các trang admin/khách hàng được tải theo route (lazy); `shared` khai báo `"sideEffects": false` để zod không nằm trong gói tải ban đầu. Trang công khai tải ~93 KB gzip (trước tối ưu ~168 KB).
+- **Tiêu đề tab chung** ("Thông tin hỗ trợ") — tên chủ áo không lọt vào lịch sử trình duyệt đồng bộ.
+
 ### Chưa triển khai
 
 - OTP 6 số (`crypto.randomInt`), lưu HMAC-SHA256, hết hạn 10 phút, tối đa 5 lần thử, gửi lại sau 60 giây. Xác thực OTP xong → cấp reset token ngắn hạn. _(Milestone 8)_
