@@ -14,6 +14,7 @@ import { Card } from '../../components/ui/Card';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { DescriptionList } from '../../components/ui/DescriptionList';
 import { Spinner } from '../../components/ui/Spinner';
+import { AvatarManager } from '../../features/customers/AvatarManager';
 import { ProfileDetails } from '../../features/customers/ProfileDetails';
 import { customerKeys } from '../../features/customers/query-keys';
 import { StatusBadge } from '../../features/customers/StatusBadge';
@@ -131,6 +132,12 @@ export function CustomerDetailPage() {
         </div>
       </div>
 
+      {created?.avatarFailed && (
+        <Alert tone="warning" title="Chưa tải được ảnh đại diện">
+          Khách hàng đã được tạo nhưng ảnh chưa được lưu. Vui lòng tải ảnh lên lại ở mục “Ảnh đại
+          diện”.
+        </Alert>
+      )}
       {created && !created.temporaryPassword && (
         <Alert tone="success" title="Đã tạo khách hàng">
           Khách hàng sẽ đăng nhập bằng mật khẩu bạn đã đặt và phải đổi mật khẩu ở lần đầu.
@@ -189,6 +196,7 @@ export function CustomerDetailPage() {
           </Card>
         </div>
         <div className="space-y-6">
+          <AvatarManager customer={customer} />
           <Card>
             <h2 className="mb-4 text-lg font-semibold">Trạng thái tài khoản</h2>
             <DescriptionList

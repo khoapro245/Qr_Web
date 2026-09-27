@@ -25,6 +25,7 @@ import {
 import { revokeAllSessionsForUser } from '../repositories/session.repository.js';
 import { updatePassword } from '../repositories/user.repository.js';
 import { AppError } from '../utils/app-error.js';
+import { sha256 } from '../utils/crypto.js';
 import { generateTemporaryPassword, hashPassword } from '../utils/password.js';
 import { uniqueViolationConstraint } from '../utils/pg-errors.js';
 import { changedFields, recordAudit } from './audit.service.js';
@@ -45,6 +46,8 @@ export function toProfileView(profile: CustomerProfile): CustomerProfileView {
     weightKg: profile.weightKg,
     heightCm: profile.heightCm,
     hasAvatar: profile.avatarKey !== null,
+    // Derived from the storage key so it changes with every upload without revealing the key.
+    avatarVersion: profile.avatarKey ? sha256(profile.avatarKey).slice(0, 12) : null,
   };
 }
 

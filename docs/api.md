@@ -37,6 +37,12 @@ Mã lỗi: `INVALID_CREDENTIALS` (401), `ACCOUNT_LOCKED` (423, `details.retryAft
 | PATCH  | `/users/:id/status`         | `{ status }` — vô hiệu hóa sẽ đăng xuất khách hàng ngay                                          |
 | POST   | `/users/:id/reset-password` | Cấp mật khẩu tạm mới `{ temporaryPassword }`, bắt đổi khi đăng nhập                              |
 
+| GET | `/users/:id/avatar` | Ảnh đại diện (`image/webp`), 404 `AVATAR_NOT_FOUND` nếu chưa có |
+| PUT | `/users/:id/avatar` | Tải/đổi ảnh: `multipart/form-data`, **một** file trong trường `avatar`, tối đa 5 MB |
+| DELETE | `/users/:id/avatar` | Xóa ảnh |
+
+- Ảnh: chỉ nhận JPEG/PNG/WebP (xác định bằng cách giải mã, không tin MIME type), tối thiểu 64×64. Lỗi: `INVALID_IMAGE`, `IMAGE_TOO_SMALL` (400), `FILE_TOO_LARGE` (413), `FILE_REQUIRED` / `INVALID_UPLOAD` (400). Ảnh được lưu lại dạng WebP 512×512, không còn metadata.
+- `profile.avatarVersion` đổi mỗi khi đổi ảnh — gắn vào URL ảnh (`?v=`) để trình duyệt không dùng ảnh cũ.
 - Tìm kiếm khớp tên (không phân biệt dấu: `nguyen` → "Nguyễn"), email, hoặc SĐT (gõ `0912…` hay `+84912…` đều được).
 - `id` không hợp lệ / không phải khách hàng → `404 CUSTOMER_NOT_FOUND`.
 - Email/SĐT trùng → `409 EMAIL_TAKEN` / `PHONE_TAKEN` kèm `details` theo trường.
@@ -69,5 +75,6 @@ Body tạo khách hàng:
 | ------ | ---------- | -------------------------------------------------------------------------------------- |
 | GET    | `/profile` | `{ account: { email, phone }, profile }`                                               |
 | PUT    | `/profile` | Sửa họ tên, ngày sinh, giới tính, địa chỉ, SĐT gia đình, nhóm máu, cân nặng, chiều cao |
+| GET    | `/avatar`  | Ảnh đại diện của chính mình (chỉ xem — khách hàng không có API tải/đổi ảnh)            |
 
 Không có tham số `:id` — khách hàng chỉ truy cập được dữ liệu của chính mình. Các trường khác gửi lên (email, role, avatar, tuổi…) bị bỏ qua.

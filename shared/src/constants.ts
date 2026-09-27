@@ -13,5 +13,10 @@ export type BloodGroup = (typeof BLOOD_GROUPS)[number];
 export const QR_STATUSES = ['ACTIVE', 'REVOKED'] as const;
 export type QrStatus = (typeof QR_STATUSES)[number];
 
+export const AVATAR_MAX_BYTES = 5 * 1024 * 1024;
+export const AVATAR_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
+/** Smallest accepted source image side; smaller photos look blurry on the QR page. */
+export const AVATAR_MIN_DIMENSION = 64;
+
 export const OTP_CHANNELS = ['EMAIL', 'SMS'] as const;
 export type OtpChannel = (typeof OTP_CHANNELS)[number];

@@ -1,6 +1,8 @@
 import { Router } from 'express';
+import * as avatars from '../controllers/avatar.controller.js';
 import * as customers from '../controllers/customer.controller.js';
 import type { RateLimiters } from '../middleware/rate-limit.js';
+import { avatarUpload } from '../middleware/upload.js';
 
 /** Mounted behind authenticate + requirePasswordChanged + requireRole('ADMIN'). */
 export function createAdminRouter(limiters: RateLimiters): Router {
@@ -14,6 +16,11 @@ export function createAdminRouter(limiters: RateLimiters): Router {
   router.put('/users/:id', customers.update);
   router.patch('/users/:id/status', customers.setStatus);
   router.post('/users/:id/reset-password', limiters.sensitive, customers.resetPassword);
+
+  // Avatars can only ever be changed here, by an admin.
+  router.get('/users/:id/avatar', avatars.show);
+  router.put('/users/:id/avatar', avatarUpload, avatars.upload);
+  router.delete('/users/:id/avatar', avatars.remove);
 
   return router;
 }

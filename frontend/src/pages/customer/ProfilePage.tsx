@@ -4,11 +4,12 @@ import {
   type ProfileFields as ProfileOutput,
 } from '@qrcare/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Pencil, UserRound } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import { useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
-import { fetchOwnProfile, updateOwnProfile } from '../../api/customers';
+import { avatarUrls, fetchOwnProfile, updateOwnProfile } from '../../api/customers';
 import { Alert } from '../../components/ui/Alert';
+import { Avatar } from '../../components/ui/Avatar';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { DescriptionList } from '../../components/ui/DescriptionList';
@@ -77,12 +78,11 @@ export function ProfilePage() {
       {saved && <Alert tone="success">Đã lưu thay đổi hồ sơ.</Alert>}
 
       <Card className="flex items-center gap-4">
-        <div
-          aria-hidden="true"
-          className="flex size-16 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-soft-fg"
-        >
-          <UserRound className="size-8" />
-        </div>
+        <Avatar
+          size="lg"
+          name={profile.fullName}
+          src={profile.avatarVersion ? avatarUrls.own(profile.avatarVersion) : null}
+        />
         <div className="space-y-1">
           <p className="font-medium">Ảnh đại diện</p>
           <p className="text-sm text-fg-muted">

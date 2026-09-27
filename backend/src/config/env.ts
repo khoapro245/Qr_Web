@@ -30,6 +30,10 @@ const envSchema = z
     JWT_ACCESS_SECRET: secret,
     // Defaults to true in production. Only disable for plain-HTTP local testing.
     COOKIE_SECURE: z.stringbool().optional(),
+
+    // Only local disk for now; an S3-compatible provider can be added behind the same interface.
+    STORAGE_PROVIDER: z.enum(['local']).default('local'),
+    STORAGE_LOCAL_DIR: z.string().min(1).default('storage'),
   })
   .superRefine((value, ctx) => {
     if (value.NODE_ENV === 'production' && /change-me/i.test(value.JWT_ACCESS_SECRET)) {

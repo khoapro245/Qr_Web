@@ -2,7 +2,7 @@
 
 Hệ thống thông tin cá nhân qua mã QR gắn trên áo. Mỗi áo có một mã QR riêng; ai quét mã đều xem được thông tin hỗ trợ (được phép công khai) của người mặc mà không cần đăng nhập.
 
-> Trạng thái: đang phát triển — đã xong Milestone 1–4 (khởi tạo, database, đăng nhập, quản lý khách hàng).
+> Trạng thái: đang phát triển — đã xong Milestone 1–5 (khởi tạo, database, đăng nhập, quản lý khách hàng, ảnh đại diện).
 > Kiến trúc và các quyết định: [docs/architecture.md](docs/architecture.md) · API: [docs/api.md](docs/api.md).
 
 ## Công nghệ
@@ -94,5 +94,6 @@ Mở http://localhost:5173 và đăng nhập bằng email admin cùng mật kh�
 
 ## Bảo mật
 
+- Ảnh đại diện lưu ở `backend/storage/` (đã có trong `.gitignore`) — cần sao lưu thư mục này cùng với database.
 - Không bao giờ commit file `.env`. Chỉ `.env.example` (giá trị giả) được đưa lên Git.
 - Xem thêm các biện pháp bảo mật trong [docs/architecture.md](docs/architecture.md).

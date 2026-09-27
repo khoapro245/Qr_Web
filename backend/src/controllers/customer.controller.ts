@@ -6,21 +6,11 @@ import {
   updateStatusSchema,
 } from '@qrcare/shared';
 import type { Request, Response } from 'express';
-import { z } from 'zod';
 import { getAuth } from '../middleware/authenticate.js';
 import { parseInput } from '../middleware/validate.js';
 import * as customers from '../services/customer.service.js';
 import { getDashboardStats } from '../services/dashboard.service.js';
-import { AppError } from '../utils/app-error.js';
-
-const uuid = z.uuid();
-
-/** A malformed id is simply "not found" — never a 500 from the database driver. */
-function customerId(req: Request): string {
-  const parsed = uuid.safeParse(req.params.id);
-  if (!parsed.success) throw new AppError(404, 'CUSTOMER_NOT_FOUND', 'Customer not found');
-  return parsed.data;
-}
+import { customerId } from './params.js';
 
 export async function dashboard(_req: Request, res: Response) {
   const [stats, recentCustomers] = await Promise.all([

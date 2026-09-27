@@ -1,3 +1,5 @@
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { loadEnv } from 'vite';
 import { defineConfig } from 'vitest/config';
 
@@ -10,7 +12,13 @@ if (!testDatabaseUrl || !/\/[^/?]+_test(\?|$)/.test(testDatabaseUrl)) {
 }
 
 // Applied here (not only via test.env) so globalSetup, which runs in this process, sees it too.
-Object.assign(process.env, { ...fileEnv, NODE_ENV: 'test', DATABASE_URL: testDatabaseUrl });
+Object.assign(process.env, {
+  ...fileEnv,
+  NODE_ENV: 'test',
+  DATABASE_URL: testDatabaseUrl,
+  STORAGE_PROVIDER: 'local',
+  STORAGE_LOCAL_DIR: join(tmpdir(), 'qrcare-test-storage'),
+});
 
 export default defineConfig({
   test: {

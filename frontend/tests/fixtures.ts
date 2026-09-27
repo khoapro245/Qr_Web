@@ -58,8 +58,14 @@ export const customerDetail: CustomerDetail = {
     weightKg: 60.5,
     heightCm: 170,
     hasAvatar: false,
+    avatarVersion: null,
   },
 };
+
+export const withAvatar = (detail: CustomerDetail): CustomerDetail => ({
+  ...detail,
+  profile: { ...detail.profile, hasAvatar: true, avatarVersion: 'abc123def456' },
+});
 
 export const customerSummary: CustomerSummary = {
   id: customerDetail.id,

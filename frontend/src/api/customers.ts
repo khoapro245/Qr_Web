@@ -59,6 +59,29 @@ export async function setCustomerStatus(
   return data.customer;
 }
 
+export async function uploadCustomerAvatar(id: string, file: File): Promise<CustomerDetail> {
+  const form = new FormData();
+  form.append('avatar', file);
+  const data = await unwrap<{ customer: CustomerDetail }>(
+    api.put(`/admin/users/${encodeURIComponent(id)}/avatar`, form),
+  );
+  return data.customer;
+}
+
+export async function deleteCustomerAvatar(id: string): Promise<CustomerDetail> {
+  const data = await unwrap<{ customer: CustomerDetail }>(
+    api.delete(`/admin/users/${encodeURIComponent(id)}/avatar`),
+  );
+  return data.customer;
+}
+
+/** Image URLs are same-origin, so the session cookie authorises them like any API call. */
+export const avatarUrls = {
+  admin: (id: string, version: string) =>
+    `/api/admin/users/${encodeURIComponent(id)}/avatar?v=${version}`,
+  own: (version: string) => `/api/me/avatar?v=${version}`,
+};
+
 export function resetCustomerPassword(id: string): Promise<{ temporaryPassword: string }> {
   return unwrap(api.post(`/admin/users/${encodeURIComponent(id)}/reset-password`));
 }

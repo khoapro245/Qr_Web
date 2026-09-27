@@ -30,6 +30,8 @@ export interface CustomerProfileView {
   weightKg: number | null;
   heightCm: number | null;
   hasAvatar: boolean;
+  /** Changes whenever the avatar changes; append to the image URL to bypass stale images. */
+  avatarVersion: string | null;
 }
 
 /** One row of the admin customer list. */

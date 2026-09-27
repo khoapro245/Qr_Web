@@ -1,9 +1,9 @@
 import { createCustomerSchema, PASSWORD_MIN_LENGTH, type CreateCustomer } from '@qrcare/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { FormProvider, useForm } from 'react-hook-form';
+import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router';
-import { createCustomer } from '../../api/customers';
+import { createCustomer, uploadCustomerAvatar } from '../../api/customers';
 import { Alert } from '../../components/ui/Alert';
 import { BackLink } from '../../components/ui/BackLink';
 import { Button } from '../../components/ui/Button';
@@ -11,6 +11,7 @@ import { buttonClasses } from '../../components/ui/button-classes';
 import { Card } from '../../components/ui/Card';
 import { CheckboxField } from '../../components/ui/CheckboxField';
 import { PasswordField } from '../../components/ui/TextField';
+import { AvatarPicker } from '../../features/customers/AvatarPicker';
 import {
   EMPTY_PROFILE,
   PROFILE_FIELD_NAMES,
@@ -32,6 +33,7 @@ interface CreateFormValues extends ProfileFormValues, LoginFormValues {
 export interface CreatedCustomerState {
   created: true;
   temporaryPassword: string | null;
+  avatarFailed: boolean;
 }
 
 export function CustomerCreatePage() {
@@ -39,6 +41,7 @@ export function CustomerCreatePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [formError, setFormError] = useState<string | null>(null);
+  const [avatar, setAvatar] = useState<File | null>(null);
 
   const form = useForm<CreateFormValues, unknown, CreateCustomer>({
     resolver: formResolver<CreateFormValues, typeof createCustomerSchema>(createCustomerSchema),
@@ -50,14 +53,24 @@ export function CustomerCreatePage() {
     setError,
     formState: { errors, isSubmitting },
   } = form;
+  const fullName = useWatch({ control: form.control, name: 'fullName' });
 
   // Receives the schema's parsed output (normalised phone numbers, numeric measurements).
   const onSubmit = async (values: CreateCustomer) => {
     setFormError(null);
     try {
       const { customer, temporaryPassword } = await createCustomer(values);
+      // The customer exists now; an avatar failure must not hide the temporary password.
+      let avatarFailed = false;
+      if (avatar) {
+        try {
+          await uploadCustomerAvatar(customer.id, avatar);
+        } catch {
+          avatarFailed = true;
+        }
+      }
       await queryClient.invalidateQueries({ queryKey: customerKeys.all });
-      const state: CreatedCustomerState = { created: true, temporaryPassword };
+      const state: CreatedCustomerState = { created: true, temporaryPassword, avatarFailed };
       void navigate(`/admin/users/${customer.id}`, { state });
     } catch (err) {
       const applied = applyServerFieldErrors(err, setError, [
@@ -85,6 +98,11 @@ export function CustomerCreatePage() {
           <Card>
             <h2 className="mb-4 text-lg font-semibold">Thông tin cá nhân</h2>
             <ProfileFields />
+          </Card>
+
+          <Card>
+            <h2 className="mb-4 text-lg font-semibold">Ảnh đại diện</h2>
+            <AvatarPicker file={avatar} onChange={setAvatar} name={fullName} />
           </Card>
 
           <Card className="space-y-4">

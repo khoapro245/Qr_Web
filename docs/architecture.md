@@ -84,6 +84,22 @@ Dev: Vite proxy /api → :4000      ─┘         ├─► StorageProvider (Lo
 - `audit_logs` ghi: tạo, sửa (chỉ **tên** trường thay đổi), đổi trạng thái (`from`/`to`), cấp lại mật khẩu, khách tự sửa hồ sơ.
 - Mật khẩu tạm chỉ xuất hiện trong response tạo/cấp lại và trên màn hình admin **một lần** (trang chi tiết xóa nó khỏi lịch sử trình duyệt ngay sau khi đọc).
 
+## Ảnh đại diện (Milestone 5)
+
+```text
+Admin chọn ảnh ──► multer (bộ nhớ, ≤ 5 MB, đúng 1 file "avatar")
+                   └► sharp: giải mã → kiểm tra định dạng thật (JPEG/PNG/WebP) & kích thước (≥ 64px, ≤ 40MP)
+                      └► xoay theo EXIF → cắt vuông 512×512 → WebP → (metadata bị loại bỏ)
+                         └► StorageProvider.put("avatars/<random>.webp")
+                            └► DB: customer_profiles.avatar_key = key  (ảnh cũ xóa sau khi DB cập nhật)
+```
+
+- **Chỉ admin** có API tải/đổi/xóa ảnh. Khách hàng chỉ có `GET /api/me/avatar`.
+- **Không tin client**: MIME type, tên file đều bị bỏ qua; định dạng xác định bằng cách giải mã. SVG bị từ chối. Tên file do server sinh ngẫu nhiên (144-bit).
+- **Riêng tư**: ảnh chụp điện thoại thường chứa EXIF (tọa độ GPS, model máy) — mã hóa lại sẽ xóa hết.
+- **Lưu trữ tách biệt** qua interface `StorageProvider` (`put/get/delete` theo key). Hiện có `LocalDiskStorage` (thư mục `backend/storage`, cần sao lưu cùng DB). Thêm S3-compatible sau này chỉ là thêm một class — sẽ hỏi trước vì cần thêm dependency (SDK).
+- **Ảnh không có URL công khai cố định**: admin xem qua `/api/admin/users/:id/avatar`, khách qua `/api/me/avatar`, trang QR công khai (Milestone 7) qua `/api/qr/:token/avatar` — thu hồi QR là ảnh cũng không truy cập được nữa.
+
 ### Chưa triển khai
 
 - OTP 6 số (`crypto.randomInt`), lưu HMAC-SHA256, hết hạn 10 phút, tối đa 5 lần thử, gửi lại sau 60 giây. Xác thực OTP xong → cấp reset token ngắn hạn. _(Milestone 8)_

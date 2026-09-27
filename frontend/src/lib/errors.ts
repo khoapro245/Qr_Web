@@ -18,6 +18,11 @@ const MESSAGES: Record<string, string> = {
   EMAIL_TAKEN: 'Email này đã được dùng cho tài khoản khác.',
   PHONE_TAKEN: 'Số điện thoại này đã được dùng cho tài khoản khác.',
   CSRF_TOKEN_INVALID: 'Phiên làm việc không hợp lệ. Vui lòng tải lại trang.',
+  INVALID_IMAGE: 'Tệp không phải ảnh hợp lệ. Vui lòng chọn ảnh JPEG, PNG hoặc WebP.',
+  IMAGE_TOO_SMALL: 'Ảnh quá nhỏ. Vui lòng chọn ảnh ít nhất 64×64 điểm ảnh.',
+  FILE_TOO_LARGE: 'Ảnh quá lớn. Vui lòng chọn ảnh tối đa 5 MB.',
+  FILE_REQUIRED: 'Vui lòng chọn một ảnh.',
+  INVALID_UPLOAD: 'Tải ảnh lên không thành công. Vui lòng thử lại.',
 };
 
 const FALLBACK = 'Đã có lỗi xảy ra. Vui lòng thử lại.';
