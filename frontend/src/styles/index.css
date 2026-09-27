@@ -1,0 +1,4 @@
+@import 'tailwindcss';
+
+/* Theme is driven by a `dark` class on <html> so users can override the OS preference. */
+@custom-variant dark (&:where(.dark, .dark *));
