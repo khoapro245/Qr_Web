@@ -2,7 +2,7 @@
 
 Hệ thống thông tin cá nhân qua mã QR gắn trên áo. Mỗi áo có một mã QR riêng; ai quét mã đều xem được thông tin hỗ trợ (được phép công khai) của người mặc mà không cần đăng nhập.
 
-> Trạng thái: đang phát triển — **Milestone 1 (khởi tạo dự án)** đã xong.
+> Trạng thái: đang phát triển — đã xong Milestone 1–3 (khởi tạo, database, đăng nhập).
 > Kiến trúc và các quyết định: [docs/architecture.md](docs/architecture.md).
 
 ## Công nghệ
@@ -36,7 +36,9 @@ Hệ thống thông tin cá nhân qua mã QR gắn trên áo. Mỗi áo có mộ
 # 1. Cài dependencies cho mọi workspace
 npm install
 
-# 2. Tạo file cấu hình backend (giá trị mặc định khớp với docker-compose.yml)
+# 2. Tạo file cấu hình backend (giá trị mặc định khớp với docker-compose.yml),
+#    rồi thay JWT_ACCESS_SECRET bằng chuỗi ngẫu nhiên sinh từ lệnh:
+#    node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
 cp backend/.env.example backend/.env
 
 # 3. Khởi động PostgreSQL (tạo sẵn 2 database: qrcare và qrcare_test)
@@ -52,7 +54,7 @@ npm run db:seed-admin -w backend -- admin@example.com
 npm run dev
 ```
 
-Mở http://localhost:5173 — trang sẽ hiển thị trạng thái kết nối tới API.
+Mở http://localhost:5173 và đăng nhập bằng email admin cùng mật khẩu tạm ở bước 5. Lần đăng nhập đầu, hệ thống bắt buộc đổi mật khẩu.
 
 ### Không dùng Docker? Cài PostgreSQL trực tiếp
 

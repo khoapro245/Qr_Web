@@ -50,9 +50,34 @@ Dev: Vite proxy /api → :4000      ─┘         ├─► StorageProvider (Lo
 
 ## Bảo mật xác thực
 
-- Access JWT 15 phút + refresh token 7 ngày, xoay vòng, lưu **hash** trong DB. Refresh token cũ bị dùng lại → thu hồi cả family.
-- Cookie `HttpOnly`, `Secure` (production), `SameSite=Strict`. CSRF double-submit token cho request thay đổi dữ liệu.
-- Mật khẩu hash bằng Argon2id. Khóa tạm thời khi đăng nhập sai nhiều lần.
+### Phiên đăng nhập (đã triển khai — Milestone 3)
+
+| Cookie     | Nội dung                                   | Thuộc tính                                                 |
+| ---------- | ------------------------------------------ | ---------------------------------------------------------- |
+| `qrc_at`   | Access JWT (HS256), sống 15 phút           | `HttpOnly`, `SameSite=Strict`, `Path=/api`, `Secure`*      |
+| `qrc_rt`   | Refresh token ngẫu nhiên 256-bit, 7 ngày   | `HttpOnly`, `SameSite=Strict`, `Path=/api/auth`, `Secure`* |
+| `qrc_csrf` | CSRF token (SPA đọc và gửi lại qua header) | `SameSite=Strict`, `Path=/`, `Secure`*                     |
+
+\* `Secure` bật mặc định khi `NODE_ENV=production` (ghi đè bằng `COOKIE_SECURE`).
+
+- **JWT chỉ chứa** `sub` (user id), `role`, `sid` (session family). Không có thông tin cá nhân.
+- **Refresh token là chuỗi ngẫu nhiên, không phải JWT**, DB chỉ lưu SHA-256 của nó → không cần `JWT_REFRESH_SECRET` như gợi ý ban đầu trong spec.
+- **Xoay vòng**: mỗi lần refresh cấp token mới trong cùng family và thu hồi token cũ. Token cũ bị dùng lại sau 30 giây → coi là bị đánh cắp, thu hồi cả family. Trong 30 giây → coi là 2 tab refresh cùng lúc, trả `409 REFRESH_CONFLICT` để client thử lại.
+- **Kiểm tra DB mỗi request**: middleware `authenticate` xác minh JWT rồi kiểm tra user còn `ACTIVE`, session family còn sống, và token được cấp sau lần đổi mật khẩu gần nhất. Vai trò lấy từ DB, không tin vào token. → Đăng xuất, khóa tài khoản, đổi mật khẩu có hiệu lực **ngay lập tức**.
+- **Đổi mật khẩu** thu hồi mọi phiên khác và cấp phiên mới cho thiết bị hiện tại.
+- **Bắt buộc đổi mật khẩu mặc định**: khi `must_change_password = true`, mọi API ngoài `/auth/me`, `/auth/change-password`, `/auth/logout` trả `403 PASSWORD_CHANGE_REQUIRED`.
+
+### Chống tấn công
+
+- **CSRF**: cookie `SameSite=Strict` + kiểm tra header `Origin` (nếu có) phải bằng `APP_ORIGIN` + double-submit token (`X-CSRF-Token` phải khớp cookie `qrc_csrf`) cho mọi POST/PUT/PATCH/DELETE, kể cả đăng nhập.
+- **Dò mật khẩu**: sau 5 lần sai liên tiếp, tài khoản bị khóa 15 phút (lưu trong DB, áp dụng cho mọi IP). Thêm giới hạn theo IP: đăng nhập 20 lần / 15 phút, refresh 120 / 15 phút, đổi mật khẩu 10 / 15 phút, toàn API 300 / phút.
+- **Dò tài khoản**: "không có tài khoản" và "sai mật khẩu" trả **cùng một** lỗi `INVALID_CREDENTIALS`, và server vẫn chạy Argon2 với hash giả để thời gian phản hồi như nhau. _Khác với ví dụ thông báo trong spec §29 ("Invalid email or phone." / "Password is incorrect.") — tách hai thông báo sẽ giúp kẻ tấn công biết email/SĐT nào đã đăng ký._ Trạng thái "đã vô hiệu hóa" chỉ được báo sau khi mật khẩu đúng.
+- **Mật khẩu**: Argon2id (19 MiB, 2 vòng — mức tối thiểu OWASP). Mật khẩu mới: 8–128 ký tự, có chữ và số.
+- Mọi response `/api` có `Cache-Control: no-store`.
+
+### Chưa triển khai
+
+- OTP 6 số (`crypto.randomInt`), lưu HMAC-SHA256, hết hạn 10 phút, tối đa 5 lần thử, gửi lại sau 60 giây. Xác thực OTP xong → cấp reset token ngắn hạn. _(Milestone 8)_
 - OTP 6 số (`crypto.randomInt`), lưu HMAC-SHA256, hết hạn 10 phút, tối đa 5 lần thử, gửi lại sau 60 giây. Xác thực OTP xong → cấp reset token ngắn hạn.
 - QR token: 128-bit `crypto.randomBytes` → base64url (22 ký tự). QR in ECC mức Q.
 

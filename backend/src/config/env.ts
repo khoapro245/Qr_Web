@@ -11,19 +11,41 @@ const postgresUrl = z
   .string()
   .regex(/^postgres(ql)?:\/\//, 'must be a postgres:// connection string');
 
-const envSchema = z.object({
-  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  HOST: z.string().min(1).default('127.0.0.1'),
-  PORT: z.coerce.number().int().min(1).max(65535).default(4000),
-  LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
-  APP_ORIGIN: z.url().default('http://localhost:5173'),
-  TRUST_PROXY: z.coerce.number().int().min(0).default(0),
+const secret = z.string().min(32, 'must be at least 32 characters');
 
-  DATABASE_URL: postgresUrl,
-  DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(100).default(10),
-});
+const envSchema = z
+  .object({
+    NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+    HOST: z.string().min(1).default('127.0.0.1'),
+    PORT: z.coerce.number().int().min(1).max(65535).default(4000),
+    LOG_LEVEL: z
+      .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
+      .default('info'),
+    APP_ORIGIN: z.url().default('http://localhost:5173'),
+    TRUST_PROXY: z.coerce.number().int().min(0).default(0),
 
-export type Env = z.infer<typeof envSchema>;
+    DATABASE_URL: postgresUrl,
+    DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(100).default(10),
+
+    JWT_ACCESS_SECRET: secret,
+    // Defaults to true in production. Only disable for plain-HTTP local testing.
+    COOKIE_SECURE: z.stringbool().optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.NODE_ENV === 'production' && /change-me/i.test(value.JWT_ACCESS_SECRET)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['JWT_ACCESS_SECRET'],
+        message: 'placeholder secret used in production',
+      });
+    }
+  })
+  .transform((value) => ({
+    ...value,
+    COOKIE_SECURE: value.COOKIE_SECURE ?? value.NODE_ENV === 'production',
+  }));
+
+export type Env = z.output<typeof envSchema>;
 
 function loadEnv(): Env {
   const parsed = envSchema.safeParse(process.env);

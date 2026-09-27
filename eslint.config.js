@@ -40,6 +40,10 @@ export default defineConfig(
     languageOptions: { globals: globals.node },
   },
   {
+    files: ['frontend/public/**/*.js'],
+    languageOptions: { globals: globals.browser, sourceType: 'script' },
+  },
+  {
     files: ['frontend/**/*.{ts,tsx}'],
     extends: [reactHooks.configs.flat.recommended, reactRefresh.configs.vite],
     languageOptions: { globals: globals.browser },
