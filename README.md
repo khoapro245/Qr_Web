@@ -111,6 +111,8 @@ docker compose --env-file deploy/production.env -f deploy/compose.yml up -d --bu
 
 Hướng dẫn đầy đủ (máy chủ, HTTPS, admin đầu tiên, cập nhật, biến môi trường): [docs/deployment.md](docs/deployment.md). Sao lưu, khôi phục, giám sát, xử lý sự cố: [docs/operations.md](docs/operations.md).
 
+**Cho người khác dùng thử từ máy này (miễn phí, chỉ để test):** `powershell -ExecutionPolicy Bypass -File deploy\try-online.ps1` chạy bản production qua Cloudflare Tunnel và in ra một địa chỉ https công khai; thêm `-Stop` để tắt. Địa chỉ đổi mỗi lần chạy lại và chỉ hoạt động khi máy đang bật — không in áo thật bằng địa chỉ này.
+
 > Link trong QR được in lên áo và không sửa được — phải chốt domain lâu dài (`PUBLIC_QR_BASE_URL`) trước khi in áo thật.
 
 ## Bảo mật
