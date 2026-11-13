@@ -10,6 +10,11 @@ import { Button } from '../../components/ui/Button';
 import { buttonClasses } from '../../components/ui/button-classes';
 import { Card } from '../../components/ui/Card';
 import { Spinner } from '../../components/ui/Spinner';
+import { MedicalConditionSelect } from '../../features/medical-content/MedicalConditionSelect';
+import {
+  getUserCondition,
+  setUserCondition,
+} from '../../features/medical-content/medical-content.storage';
 import {
   PROFILE_FIELD_NAMES,
   toProfileFormValues,
@@ -53,6 +58,14 @@ export function CustomerEditPage() {
 function EditForm({ customer }: { customer: CustomerDetail }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [selectedConditionId, setSelectedConditionId] = useState<string>(() => {
+    return (
+      getUserCondition(customer.profile.familyPhone) ||
+      getUserCondition(customer.profile.fullName) ||
+      getUserCondition(customer.id) ||
+      'trauma'
+    );
+  });
   const [formError, setFormError] = useState<string | null>(null);
   const detailPath = `/admin/users/${customer.id}`;
 
@@ -69,6 +82,9 @@ function EditForm({ customer }: { customer: CustomerDetail }) {
     setFormError(null);
     try {
       const updated = await updateCustomer(customer.id, values);
+      setUserCondition(values.familyPhone, selectedConditionId);
+      setUserCondition(values.fullName, selectedConditionId);
+      setUserCondition(customer.id, selectedConditionId);
       queryClient.setQueryData(customerKeys.detail(customer.id), updated);
       void queryClient.invalidateQueries({ queryKey: customerKeys.lists });
       void navigate(detailPath);
@@ -99,6 +115,12 @@ function EditForm({ customer }: { customer: CustomerDetail }) {
           <Card>
             <h2 className="mb-4 text-lg font-semibold">Thông tin cá nhân</h2>
             <ProfileFields />
+            <div className="mt-4 border-t border-border pt-4">
+              <MedicalConditionSelect
+                value={selectedConditionId}
+                onChange={setSelectedConditionId}
+              />
+            </div>
           </Card>
           <Card className="space-y-4">
             <h2 className="text-lg font-semibold">Thông tin đăng nhập</h2>

@@ -85,10 +85,10 @@ export function AppShell({ area }: { area: 'admin' | 'customer' }) {
       >
         Bỏ qua điều hướng
       </a>
-      <header className="sticky top-0 z-40 border-b border-border bg-surface/95 backdrop-blur print:hidden">
+      <header className="sticky top-0 z-40 border-b border-border/60 bg-surface/90 backdrop-blur print:hidden">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4">
-          <Link to={home} aria-label="QR Care — trang chủ">
-            <Logo />
+          <Link to={home} aria-label="Anmove — trang chủ">
+            <Logo size="md" />
           </Link>
           <nav aria-label="Điều hướng chính" className="hidden flex-1 items-center gap-1 md:flex">
             {navLinks}

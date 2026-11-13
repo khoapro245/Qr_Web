@@ -15,6 +15,12 @@ import { Card } from '../../components/ui/Card';
 import { DescriptionList } from '../../components/ui/DescriptionList';
 import { Spinner } from '../../components/ui/Spinner';
 import { AUTH_QUERY_KEY } from '../../features/auth/use-auth';
+import { EmergencyLocationAction } from '../../features/emergency/EmergencyLocationAction';
+import { MedicalConditionSelect } from '../../features/medical-content/MedicalConditionSelect';
+import {
+  getUserCondition,
+  setUserCondition,
+} from '../../features/medical-content/medical-content.storage';
 import {
   PROFILE_FIELD_NAMES,
   toProfileFormValues,
@@ -101,10 +107,20 @@ export function ProfilePage() {
           }}
         />
       ) : (
-        <Card>
-          <h2 className="mb-4 text-lg font-semibold">Thông tin hiển thị trên mã QR</h2>
-          <ProfileDetails profile={profile} />
-        </Card>
+        <>
+          <Card>
+            <h2 className="mb-4 text-lg font-semibold">Thông tin hiển thị trên mã QR</h2>
+            <ProfileDetails profile={profile} />
+          </Card>
+          <Card>
+            <h2 className="mb-2 text-lg font-semibold">Cứu hộ khẩn cấp & Vị trí GPS</h2>
+            <EmergencyLocationAction
+              fullName={profile.fullName}
+              familyPhone={profile.familyPhone}
+              mode="preview"
+            />
+          </Card>
+        </>
       )}
 
       <Card>
@@ -133,6 +149,14 @@ function EditProfileForm({
   onSaved: () => void;
 }) {
   const queryClient = useQueryClient();
+  const [selectedConditionId, setSelectedConditionId] = useState<string>(() => {
+    return (
+      getUserCondition(data.profile.familyPhone) ||
+      getUserCondition(data.profile.fullName) ||
+      getUserCondition('current_user') ||
+      'trauma'
+    );
+  });
   const [formError, setFormError] = useState<string | null>(null);
   const form = useForm<ProfileFormValues, unknown, ProfileOutput>({
     resolver: formResolver<ProfileFormValues, typeof updateOwnProfileSchema>(
@@ -145,6 +169,9 @@ function EditProfileForm({
     setFormError(null);
     try {
       const updated = await updateOwnProfile(values);
+      setUserCondition(values.familyPhone, selectedConditionId);
+      setUserCondition(values.fullName, selectedConditionId);
+      setUserCondition('current_user', selectedConditionId);
       queryClient.setQueryData(customerKeys.ownProfile, updated);
       // The header shows the customer's name.
       void queryClient.invalidateQueries({ queryKey: AUTH_QUERY_KEY });
@@ -162,6 +189,9 @@ function EditProfileForm({
           <h2 className="text-lg font-semibold">Chỉnh sửa thông tin</h2>
           {formError && <Alert tone="error">{formError}</Alert>}
           <ProfileFields />
+          <div className="border-t border-border pt-4">
+            <MedicalConditionSelect value={selectedConditionId} onChange={setSelectedConditionId} />
+          </div>
           <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <Button variant="secondary" onClick={onCancel} disabled={form.formState.isSubmitting}>
               Hủy

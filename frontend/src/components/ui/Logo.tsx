@@ -1,13 +1,25 @@
-import { HeartPulse } from 'lucide-react';
+import anmoveLogo from '../../assets/anmove-logo.png';
 import { cn } from '../../lib/cn';
 
-export function Logo({ className }: { className?: string }) {
+interface LogoProps {
+  className?: string;
+  size?: 'sm' | 'md' | 'lg';
+}
+
+export function Logo({ className, size = 'md' }: LogoProps) {
+  const sizeClasses = {
+    sm: 'h-6',
+    md: 'h-7 sm:h-8',
+    lg: 'h-10 sm:h-12',
+  }[size];
+
   return (
-    <span className={cn('inline-flex items-center gap-2 font-semibold text-fg', className)}>
-      <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-fg">
-        <HeartPulse aria-hidden="true" className="size-5" />
-      </span>
-      QR Care
+    <span className={cn('inline-flex items-center', className)}>
+      <img
+        src={anmoveLogo}
+        alt="Anmove"
+        className={cn('w-auto object-contain select-none', sizeClasses)}
+      />
     </span>
   );
 }

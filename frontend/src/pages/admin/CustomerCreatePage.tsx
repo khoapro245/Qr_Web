@@ -20,6 +20,8 @@ import {
 } from '../../features/customers/form-values';
 import { LoginIdentifierFields, ProfileFields } from '../../features/customers/ProfileFields';
 import { customerKeys } from '../../features/customers/query-keys';
+import { MedicalConditionSelect } from '../../features/medical-content/MedicalConditionSelect';
+import { setUserCondition } from '../../features/medical-content/medical-content.storage';
 import { applyServerFieldErrors, errorMessage } from '../../lib/errors';
 import { formResolver } from '../../lib/form';
 import { usePageTitle } from '../../lib/use-page-title';
@@ -42,6 +44,7 @@ export function CustomerCreatePage() {
   const queryClient = useQueryClient();
   const [formError, setFormError] = useState<string | null>(null);
   const [avatar, setAvatar] = useState<File | null>(null);
+  const [selectedConditionId, setSelectedConditionId] = useState<string>('trauma');
 
   const form = useForm<CreateFormValues, unknown, CreateCustomer>({
     resolver: formResolver<CreateFormValues, typeof createCustomerSchema>(createCustomerSchema),
@@ -60,6 +63,11 @@ export function CustomerCreatePage() {
     setFormError(null);
     try {
       const { customer, temporaryPassword } = await createCustomer(values);
+      // Save customer's medical condition
+      setUserCondition(values.familyPhone, selectedConditionId);
+      setUserCondition(values.fullName, selectedConditionId);
+      setUserCondition(customer.id, selectedConditionId);
+
       // The customer exists now; an avatar failure must not hide the temporary password.
       let avatarFailed = false;
       if (avatar) {
@@ -98,6 +106,12 @@ export function CustomerCreatePage() {
           <Card>
             <h2 className="mb-4 text-lg font-semibold">Thông tin cá nhân</h2>
             <ProfileFields />
+            <div className="mt-4 border-t border-border pt-4">
+              <MedicalConditionSelect
+                value={selectedConditionId}
+                onChange={setSelectedConditionId}
+              />
+            </div>
           </Card>
 
           <Card>

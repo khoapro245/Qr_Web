@@ -4,3 +4,4 @@ coverage
 package-lock.json
 backend/migrations/meta
 backend/storage
+.vs

@@ -1,14 +1,18 @@
 import type { DashboardStats } from '@qrcare/shared';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronRight, Plus, QrCode, ShieldOff, UserCheck, UserX, Users } from 'lucide-react';
+import { useState } from 'react';
 import { Link } from 'react-router';
 import { fetchDashboard } from '../../api/customers';
 import { Alert } from '../../components/ui/Alert';
 import { Button } from '../../components/ui/Button';
 import { buttonClasses } from '../../components/ui/button-classes';
 import { Card } from '../../components/ui/Card';
+import { Pagination } from '../../components/ui/Pagination';
 import { customerKeys } from '../../features/customers/query-keys';
 import { StatusBadge } from '../../features/customers/StatusBadge';
+import { DashboardDisclaimerSummaryCard } from '../../features/medical-content/DashboardDisclaimerSummaryCard';
+import { DashboardFirstAidSummaryCard } from '../../features/medical-content/DashboardFirstAidSummaryCard';
 import { errorMessage } from '../../lib/errors';
 import { formatDateTime } from '../../lib/format';
 import { usePageTitle } from '../../lib/use-page-title';
@@ -21,12 +25,23 @@ const STATS: { key: keyof DashboardStats; label: string; Icon: typeof Users }[] 
   { key: 'revokedQrCodes', label: 'QR đã thu hồi', Icon: ShieldOff },
 ];
 
+const RECENT_PAGE_SIZE = 3;
+
 export function DashboardPage() {
   usePageTitle('Tổng quan');
+  const [recentPage, setRecentPage] = useState(1);
   const { data, isPending, error, refetch } = useQuery({
     queryKey: customerKeys.dashboard,
     queryFn: fetchDashboard,
   });
+
+  const totalRecent = data?.recentCustomers.length ?? 0;
+  const recentPageCount = Math.max(1, Math.ceil(totalRecent / RECENT_PAGE_SIZE));
+  const currentRecentPage = Math.min(recentPage, recentPageCount);
+  const paginatedRecent = (data?.recentCustomers ?? []).slice(
+    (currentRecentPage - 1) * RECENT_PAGE_SIZE,
+    currentRecentPage * RECENT_PAGE_SIZE,
+  );
 
   return (
     <div className="space-y-6">
@@ -80,33 +95,64 @@ export function DashboardPage() {
             ))}
           </dl>
 
+          {/* Quản lý nội dung y tế & cứu hộ khẩn cấp: 2 Cards gọn gàng */}
+          <section className="space-y-4">
+            <h2 className="text-lg font-semibold">Quản lý nội dung cứu hộ & y tế</h2>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <DashboardDisclaimerSummaryCard />
+              <DashboardFirstAidSummaryCard />
+            </div>
+          </section>
+
           <Card>
             <div className="mb-4 flex items-center justify-between gap-4">
-              <h2 className="text-lg font-semibold">Khách hàng mới</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold">Khách hàng mới</h2>
+                {totalRecent > 0 && (
+                  <span className="text-xs text-fg-muted">({totalRecent} gần đây)</span>
+                )}
+              </div>
               <Link to="/admin/users" className="text-sm font-medium text-primary hover:underline">
                 Xem tất cả
               </Link>
             </div>
-            {isPending ? null : data.recentCustomers.length === 0 ? (
+            {isPending ? null : totalRecent === 0 ? (
               <p className="text-sm text-fg-muted">Chưa có khách hàng nào.</p>
             ) : (
-              <ul className="divide-y divide-border">
-                {data.recentCustomers.map((c) => (
-                  <li key={c.id}>
-                    <Link
-                      to={`/admin/users/${c.id}`}
-                      className="-mx-2 flex items-center gap-3 rounded-lg px-2 py-3 hover:bg-surface-muted"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium">{c.fullName}</p>
-                        <p className="text-sm text-fg-muted">{formatDateTime(c.createdAt)}</p>
-                      </div>
-                      <StatusBadge status={c.status} />
-                      <ChevronRight aria-hidden="true" className="size-4 text-fg-muted" />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              <div className="space-y-4">
+                <ul className="divide-y divide-border">
+                  {paginatedRecent.map((c) => (
+                    <li key={c.id}>
+                      <Link
+                        to={`/admin/users/${c.id}`}
+                        className="-mx-2 flex items-center gap-3 rounded-lg px-2 py-3 hover:bg-surface-muted"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-medium">{c.fullName}</p>
+                          <p className="text-sm text-fg-muted">{formatDateTime(c.createdAt)}</p>
+                        </div>
+                        <StatusBadge status={c.status} />
+                        <ChevronRight aria-hidden="true" className="size-4 text-fg-muted" />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+
+                {totalRecent > RECENT_PAGE_SIZE && (
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
+                    <span className="text-xs text-fg-muted">
+                      {(currentRecentPage - 1) * RECENT_PAGE_SIZE + 1} -{' '}
+                      {Math.min(currentRecentPage * RECENT_PAGE_SIZE, totalRecent)} / {totalRecent}
+                    </span>
+                    <Pagination
+                      page={currentRecentPage}
+                      pageSize={RECENT_PAGE_SIZE}
+                      total={totalRecent}
+                      onPageChange={setRecentPage}
+                    />
+                  </div>
+                )}
+              </div>
             )}
           </Card>
         </>

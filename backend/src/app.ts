@@ -5,7 +5,7 @@ import express from 'express';
 import helmet from 'helmet';
 import { env } from './config/env.js';
 import { createFrontendRouter } from './http/frontend.js';
-import { csrfProtection } from './middleware/csrf.js';
+import { csrfProtection, isAllowedOrigin } from './middleware/csrf.js';
 import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
 import { httpLogger } from './middleware/http-logger.js';
 import { createRateLimiters } from './middleware/rate-limit.js';
@@ -40,7 +40,18 @@ export function createApp(options: AppOptions = {}) {
   );
   // Text responses (JS, CSS, HTML, JSON) are compressed; images are left as they are.
   app.use(compression());
-  app.use(cors({ origin: env.APP_ORIGIN, credentials: true }));
+  app.use(
+    cors({
+      origin: (requestOrigin, callback) => {
+        if (!requestOrigin || isAllowedOrigin(requestOrigin)) {
+          callback(null, true);
+        } else {
+          callback(null, false);
+        }
+      },
+      credentials: true,
+    }),
+  );
   app.use('/api', limiters.api);
   app.use(express.json({ limit: '100kb' }));
   app.use(cookieParser());

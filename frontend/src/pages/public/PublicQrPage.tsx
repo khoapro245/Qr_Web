@@ -19,6 +19,12 @@ import { fetchPublicProfile } from '../../api/public';
 import { Avatar } from '../../components/ui/Avatar';
 import { Button } from '../../components/ui/Button';
 import { Logo } from '../../components/ui/Logo';
+import { EmergencyLocationAction } from '../../features/emergency/EmergencyLocationAction';
+import { getMedicalIcon } from '../../features/medical-content/icon-map';
+import {
+  getMedicalCondition,
+  getUserCondition,
+} from '../../features/medical-content/medical-content.storage';
 import {
   BLOOD_GROUP_LABELS,
   formatDate,
@@ -59,8 +65,10 @@ export function PublicQrPage() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-bg">
-      <header className="flex justify-center px-4 py-4">
-        <Logo />
+      <header className="flex justify-center pt-0 pb-4">
+        <div className="rounded-b-3xl border-b border-x border-border/50 bg-surface/90 px-8 py-2.5 shadow-sm backdrop-blur-md">
+          <Logo size="md" />
+        </div>
       </header>
       <main className="flex-1 px-4 pb-10">{content}</main>
     </div>
@@ -68,7 +76,37 @@ export function PublicQrPage() {
 }
 
 function ProfileCard({ profile }: { profile: PublicProfile }) {
+  const condId =
+    getUserCondition(profile.familyPhone) ||
+    getUserCondition(profile.fullName) ||
+    getUserCondition('current_user') ||
+    'trauma';
+  const condition = getMedicalCondition(condId);
+  const ConditionIcon = condition ? getMedicalIcon(condition.icon) : User;
+
   const rows: { label: string; value: ReactNode; Icon: typeof User }[] = [
+    ...(condition
+      ? [
+          {
+            label: 'Bệnh lý nền / Tình trạng',
+            value: (
+              <span className="flex flex-wrap items-center gap-2">
+                <span className="font-semibold">{condition.name}</span>
+                <span className="rounded-full bg-danger-soft px-2 py-0.5 text-xs font-semibold text-danger">
+                  {condition.severity === 'critical'
+                    ? 'Nguy kịch'
+                    : condition.severity === 'high'
+                      ? 'Nguy hiểm'
+                      : condition.severity === 'medium'
+                        ? 'Cần xử lý ngay'
+                        : 'Theo dõi'}
+                </span>
+              </span>
+            ),
+            Icon: ConditionIcon,
+          },
+        ]
+      : []),
     { label: 'Ngày sinh', value: formatDate(profile.dateOfBirth), Icon: Cake },
     { label: 'Tuổi', value: `${profile.age} tuổi`, Icon: User },
     { label: 'Giới tính', value: GENDER_LABELS[profile.gender], Icon: User },
@@ -101,6 +139,13 @@ function ProfileCard({ profile }: { profile: PublicProfile }) {
           <h1 id="owner-name" className="mt-4 text-2xl font-bold break-words text-fg">
             {profile.fullName}
           </h1>
+        </div>
+        <div className="border-b border-border bg-danger-soft/20 p-4">
+          <EmergencyLocationAction
+            fullName={profile.fullName}
+            familyPhone={profile.familyPhone}
+            mode="public"
+          />
         </div>
         <dl className="divide-y divide-border px-6">
           {rows

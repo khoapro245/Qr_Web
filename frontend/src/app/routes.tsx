@@ -33,6 +33,10 @@ export const routes: RouteObject[] = [
       { path: '/', element: <HomeRedirect /> },
       { path: '/qr/:token', element: <PublicQrPage /> },
       {
+        path: '/first-aid',
+        ...lazyPage(() => import('../pages/public/FirstAidPage'), 'FirstAidPage'),
+      },
+      {
         path: '/login',
         ...lazyPage(() => import('../pages/auth/LoginPage'), 'LoginPage'),
       },
@@ -88,6 +92,17 @@ export const routes: RouteObject[] = [
               {
                 path: '/admin/users/:id/qr',
                 ...lazyPage(() => import('../pages/admin/CustomerQrPage'), 'CustomerQrPage'),
+              },
+              {
+                path: '/admin/disclaimer',
+                ...lazyPage(
+                  () => import('../pages/admin/AdminDisclaimerPage'),
+                  'AdminDisclaimerPage',
+                ),
+              },
+              {
+                path: '/admin/first-aid',
+                ...lazyPage(() => import('../pages/admin/AdminFirstAidPage'), 'AdminFirstAidPage'),
               },
             ],
           },

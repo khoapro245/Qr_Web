@@ -45,8 +45,10 @@ function contentSecurityPolicy(): Plugin {
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), contentSecurityPolicy()],
-  server: { port: 5173, strictPort: true, proxy: apiProxy },
-  preview: { port: 4173, strictPort: true, proxy: apiProxy },
+  // server: { port: 5173, strictPort: true, proxy: apiProxy },
+  // preview: { port: 4173, strictPort: true, proxy: apiProxy },
+  server: { host: true, port: 5173, strictPort: true, proxy: apiProxy },
+  preview: { host: true, port: 4173, strictPort: true, proxy: apiProxy },
   test: {
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],

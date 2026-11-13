@@ -10,17 +10,17 @@
  */
 :root {
   color-scheme: light;
-  --bg: #f5f7f9;
+  --bg: #daf0f8;
   --surface: #ffffff;
-  --surface-muted: #f1f5f9;
-  --border: #dde3ea;
-  --fg: #0f172a;
-  --fg-muted: #475569;
-  --primary: #0f766e;
-  --primary-hover: #115e59;
+  --surface-muted: #f1f8fb;
+  --border: #c8e4ef;
+  --fg: #102638;
+  --fg-muted: #3d586e;
+  --primary: #15a892;
+  --primary-hover: #118e7b;
   --primary-fg: #ffffff;
-  --primary-soft: #ccfbf1;
-  --primary-soft-fg: #134e4a;
+  --primary-soft: #d5f5ee;
+  --primary-soft-fg: #0d5c50;
   --danger: #b91c1c;
   --danger-soft: #fee2e2;
   --danger-soft-fg: #7f1d1d;
@@ -29,22 +29,22 @@
   --success-soft-fg: #14532d;
   --warning-soft: #fef3c7;
   --warning-soft-fg: #78350f;
-  --ring: #0d9488;
+  --ring: #15a892;
 }
 
 .dark {
   color-scheme: dark;
-  --bg: #0b1220;
-  --surface: #111a2b;
-  --surface-muted: #1a2436;
-  --border: #283347;
-  --fg: #e5eaf1;
-  --fg-muted: #9aa8bc;
-  --primary: #2dd4bf;
-  --primary-hover: #5eead4;
-  --primary-fg: #042f2e;
-  --primary-soft: #134e4a;
-  --primary-soft-fg: #ccfbf1;
+  --bg: #091724;
+  --surface: #0f2030;
+  --surface-muted: #152c40;
+  --border: #1e3c54;
+  --fg: #e2eef7;
+  --fg-muted: #91a8bc;
+  --primary: #22cbb2;
+  --primary-hover: #4de2cb;
+  --primary-fg: #052622;
+  --primary-soft: #0e3b34;
+  --primary-soft-fg: #97f5e5;
   --danger: #f87171;
   --danger-soft: #3f1518;
   --danger-soft-fg: #fecaca;
@@ -53,7 +53,7 @@
   --success-soft-fg: #bbf7d0;
   --warning-soft: #3a2a0a;
   --warning-soft-fg: #fde68a;
-  --ring: #2dd4bf;
+  --ring: #22cbb2;
 }
 
 /* Paper is white: always print with the light palette, even in dark mode. */
@@ -101,10 +101,28 @@
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
+    min-height: 100%;
   }
 
   body {
-    @apply bg-bg font-sans text-fg antialiased;
+    @apply font-sans text-fg antialiased;
+    background-color: #bce5eb;
+    background-image: linear-gradient(135deg, #ecf4e7 0%, #bbe4ea 32%, #bce5eb 60%, #81d4ee 100%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    min-height: 100dvh;
+  }
+
+  .dark body {
+    background-color: #091724;
+    background-image: linear-gradient(135deg, #0e2738 0%, #0d2535 40%, #071724 100%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+
+  /* Keep full visibility of the gradient background across page containers */
+  .bg-bg {
+    background-color: transparent !important;
   }
 
   /* A clearly visible keyboard focus indicator everywhere. */

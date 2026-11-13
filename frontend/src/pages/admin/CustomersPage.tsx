@@ -18,7 +18,7 @@ import { errorMessage } from '../../lib/errors';
 import { formatPhone, STATUS_LABELS } from '../../lib/format';
 import { usePageTitle } from '../../lib/use-page-title';
 
-const PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 20;
 const STATUS_OPTIONS = Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label }));
 
 export function CustomersPage() {
@@ -28,6 +28,7 @@ export function CustomersPage() {
   const search = params.get('q') ?? '';
   const status = (params.get('status') ?? '') as AccountStatus | '';
   const page = Math.max(1, Number(params.get('page')) || 1);
+  const pageSize = Math.max(1, Number(params.get('pageSize')) || DEFAULT_PAGE_SIZE);
 
   const [searchInput, setSearchInput] = useState(search);
 
@@ -36,8 +37,16 @@ export function CustomersPage() {
       (current) => {
         const next = new URLSearchParams(current);
         for (const [key, value] of Object.entries(changes)) {
-          if (value === null || value === '' || (key === 'page' && value === 1)) next.delete(key);
-          else next.set(key, String(value));
+          if (
+            value === null ||
+            value === '' ||
+            (key === 'page' && value === 1) ||
+            (key === 'pageSize' && Number(value) === DEFAULT_PAGE_SIZE)
+          ) {
+            next.delete(key);
+          } else {
+            next.set(key, String(value));
+          }
         }
         return next;
       },
@@ -55,8 +64,8 @@ export function CustomersPage() {
   }, [searchInput, search]);
 
   const { data, isPending, isFetching, error, refetch } = useQuery({
-    queryKey: customerKeys.list({ search, status, page }),
-    queryFn: () => fetchCustomers({ search, status, page, pageSize: PAGE_SIZE }),
+    queryKey: customerKeys.list({ search, status, page, pageSize }),
+    queryFn: () => fetchCustomers({ search, status, page, pageSize }),
     placeholderData: keepPreviousData,
   });
 
@@ -208,12 +217,32 @@ export function CustomersPage() {
             </table>
           </div>
 
-          <Pagination
-            page={data.page}
-            pageSize={data.pageSize}
-            total={data.total}
-            onPageChange={(next) => updateParams({ page: next })}
-          />
+          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border pt-4 text-xs text-fg-muted">
+            <div className="flex items-center gap-2">
+              <span>Hiển thị</span>
+              <select
+                aria-label="Số khách hàng trên mỗi trang"
+                value={data.pageSize}
+                onChange={(e) => updateParams({ pageSize: Number(e.target.value), page: 1 })}
+                className="rounded-lg border border-border bg-surface px-2.5 py-1 text-xs text-fg focus:border-primary focus:outline-hidden"
+              >
+                <option value={10}>10 khách hàng / trang</option>
+                <option value={20}>20 khách hàng / trang</option>
+                <option value={50}>50 khách hàng / trang</option>
+              </select>
+              <span>
+                ({(data.page - 1) * data.pageSize + 1} -{' '}
+                {Math.min(data.page * data.pageSize, data.total)} / {data.total} khách hàng)
+              </span>
+            </div>
+
+            <Pagination
+              page={data.page}
+              pageSize={data.pageSize}
+              total={data.total}
+              onPageChange={(next) => updateParams({ page: next })}
+            />
+          </div>
         </div>
       )}
     </div>
