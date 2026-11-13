@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { getPublicMedicalContent } from '../controllers/medical-content.controller.js';
 import { checkDatabaseConnection } from '../db/client.js';
 import { authenticate, requirePasswordChanged, requireRole } from '../middleware/authenticate.js';
 import type { RateLimiters } from '../middleware/rate-limit.js';
@@ -19,6 +20,7 @@ export function createApiRouter(limiters: RateLimiters): Router {
   });
 
   api.use('/auth', createAuthRouter(limiters));
+  api.get('/medical-content', getPublicMedicalContent);
   api.use('/qr', createPublicQrRouter(limiters));
   api.use(
     '/admin',

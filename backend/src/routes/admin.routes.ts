@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import * as avatars from '../controllers/avatar.controller.js';
 import * as customers from '../controllers/customer.controller.js';
+import * as medicalContent from '../controllers/medical-content.controller.js';
 import * as qr from '../controllers/qr.controller.js';
 import type { RateLimiters } from '../middleware/rate-limit.js';
 import { avatarUpload } from '../middleware/upload.js';
@@ -10,6 +11,9 @@ export function createAdminRouter(limiters: RateLimiters): Router {
   const router = Router();
 
   router.get('/dashboard', customers.dashboard);
+
+  router.get('/medical-content', medicalContent.getPublicMedicalContent);
+  router.put('/medical-content', medicalContent.updateAdminMedicalContent);
 
   router.get('/users', customers.list);
   router.post('/users', customers.create);

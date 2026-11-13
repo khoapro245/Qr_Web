@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { fetchMedicalContent, updateMedicalContent } from '../../api/medical-content';
 import type { DisclaimerData, FirstAidTopic, MedicalCondition } from './medical-content.types';
 
 export const STORAGE_KEY_DISCLAIMER = 'qrc_medical_disclaimer';
@@ -588,6 +589,7 @@ export function saveDisclaimerData(data: DisclaimerData): void {
     const toSave: DisclaimerData = { ...data, updatedAt: new Date().toISOString() };
     localStorage.setItem(STORAGE_KEY_DISCLAIMER, JSON.stringify(toSave));
     emitMedicalContentChange();
+    void updateMedicalContent({ disclaimer: toSave }).catch(() => {});
   } catch {
     // localStorage unavailable
   }
@@ -597,6 +599,7 @@ export function resetDisclaimerData(): DisclaimerData {
   try {
     localStorage.removeItem(STORAGE_KEY_DISCLAIMER);
     emitMedicalContentChange();
+    void updateMedicalContent({ disclaimer: DEFAULT_DISCLAIMER_DATA }).catch(() => {});
   } catch {
     // ignore
   }
@@ -626,6 +629,7 @@ export function saveMedicalConditions(conditions: MedicalCondition[]): void {
     const sorted = [...conditions].sort((a, b) => a.order - b.order);
     localStorage.setItem(STORAGE_KEY_CONDITIONS, JSON.stringify(sorted));
     emitMedicalContentChange();
+    void updateMedicalContent({ conditions: sorted }).catch(() => {});
   } catch {
     // ignore
   }
@@ -635,6 +639,7 @@ export function resetMedicalConditions(): MedicalCondition[] {
   try {
     localStorage.removeItem(STORAGE_KEY_CONDITIONS);
     emitMedicalContentChange();
+    void updateMedicalContent({ conditions: DEFAULT_MEDICAL_CONDITIONS }).catch(() => {});
   } catch {
     // ignore
   }
@@ -801,9 +806,73 @@ export function setUserCondition(userKey: string, conditionId: string | null): v
     }
     localStorage.setItem(STORAGE_KEY_USER_CONDITIONS, JSON.stringify(mapping));
     emitMedicalContentChange();
+    void updateMedicalContent({ userConditions: mapping }).catch(() => {});
   } catch {
     // ignore
   }
+}
+
+let syncPromise: Promise<void> | null = null;
+
+export function initMedicalContentSync(): Promise<void> {
+  if (typeof window === 'undefined') return Promise.resolve();
+  if (syncPromise) return syncPromise;
+
+  syncPromise = fetchMedicalContent()
+    .then((payload) => {
+      let changed = false;
+      const localConditionsRaw = localStorage.getItem(STORAGE_KEY_CONDITIONS);
+      if (
+        payload.conditions &&
+        Array.isArray(payload.conditions) &&
+        payload.conditions.length > 0
+      ) {
+        localStorage.setItem(STORAGE_KEY_CONDITIONS, JSON.stringify(payload.conditions));
+        changed = true;
+      } else if (localConditionsRaw) {
+        try {
+          const localParsed = JSON.parse(localConditionsRaw) as MedicalCondition[];
+          void updateMedicalContent({ conditions: localParsed }).catch(() => {});
+        } catch {
+          // ignore
+        }
+      }
+
+      const localDisclaimerRaw = localStorage.getItem(STORAGE_KEY_DISCLAIMER);
+      if (payload.disclaimer && typeof payload.disclaimer === 'object') {
+        localStorage.setItem(STORAGE_KEY_DISCLAIMER, JSON.stringify(payload.disclaimer));
+        changed = true;
+      } else if (localDisclaimerRaw) {
+        try {
+          const localParsed = JSON.parse(localDisclaimerRaw) as DisclaimerData;
+          void updateMedicalContent({ disclaimer: localParsed }).catch(() => {});
+        } catch {
+          // ignore
+        }
+      }
+
+      const localUserConditionsRaw = localStorage.getItem(STORAGE_KEY_USER_CONDITIONS);
+      if (payload.userConditions && typeof payload.userConditions === 'object') {
+        localStorage.setItem(STORAGE_KEY_USER_CONDITIONS, JSON.stringify(payload.userConditions));
+        changed = true;
+      } else if (localUserConditionsRaw) {
+        try {
+          const localParsed = JSON.parse(localUserConditionsRaw) as Record<string, string>;
+          void updateMedicalContent({ userConditions: localParsed }).catch(() => {});
+        } catch {
+          // ignore
+        }
+      }
+
+      if (changed) {
+        emitMedicalContentChange();
+      }
+    })
+    .catch(() => {
+      // Offline fallback: keep local data
+    });
+
+  return syncPromise;
 }
 
 // ---------------------------------------------------------
@@ -814,6 +883,7 @@ export function useDisclaimerContent() {
   const [data, setData] = useState<DisclaimerData>(getDisclaimerData);
 
   useEffect(() => {
+    void initMedicalContentSync();
     const handler = () => setData(getDisclaimerData());
     window.addEventListener(EVENT_MEDICAL_CONTENT_CHANGED, handler);
     window.addEventListener('storage', handler);
@@ -872,6 +942,7 @@ export function useMedicalConditions() {
   const [conditions, setConditions] = useState<MedicalCondition[]>(getMedicalConditions);
 
   useEffect(() => {
+    void initMedicalContentSync();
     const handler = () => setConditions(getMedicalConditions());
     window.addEventListener(EVENT_MEDICAL_CONTENT_CHANGED, handler);
     window.addEventListener('storage', handler);
@@ -908,6 +979,7 @@ export function useFirstAidContent(conditionId?: string) {
   const [revision, setRevision] = useState(0);
 
   useEffect(() => {
+    void initMedicalContentSync();
     const handler = () => setRevision((r) => r + 1);
     window.addEventListener(EVENT_MEDICAL_CONTENT_CHANGED, handler);
     window.addEventListener('storage', handler);
@@ -975,6 +1047,7 @@ export function useUserCondition(userKey?: string) {
   );
 
   useEffect(() => {
+    void initMedicalContentSync();
     const handler = () => setConditionIdState(getUserCondition(userKey));
     window.addEventListener(EVENT_MEDICAL_CONTENT_CHANGED, handler);
     window.addEventListener('storage', handler);
